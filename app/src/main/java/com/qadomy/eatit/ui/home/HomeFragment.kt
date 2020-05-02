@@ -4,6 +4,8 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.AnimationUtils
+import android.view.animation.LayoutAnimationController
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
@@ -19,6 +21,9 @@ class HomeFragment : Fragment() {
     private lateinit var homeViewModel: HomeViewModel
     private lateinit var viewPager: LoopingViewPager
     private lateinit var recyclerView: RecyclerView
+
+    // layout animation
+    var layoutAnimationController: LayoutAnimationController? = null
 
 
     override fun onCreateView(
@@ -38,6 +43,7 @@ class HomeFragment : Fragment() {
             val listData = it
             val adapter = MyPopularCategoriesAdapter(requireContext(), listData)
             recyclerView!!.adapter = adapter
+            recyclerView!!.layoutAnimation = layoutAnimationController
         })
 
         /**
@@ -53,7 +59,14 @@ class HomeFragment : Fragment() {
     }
 
     private fun initView(root: View) {
+        // layout animation
+        layoutAnimationController = AnimationUtils.loadLayoutAnimation(context, R.anim.layout_item_from_left)
+
+
+        // view pager
         viewPager = root.findViewById(R.id.viewpager) as LoopingViewPager
+
+        // recycler view
         recyclerView = root.findViewById(R.id.recycler_popular)
         recyclerView!!.setHasFixedSize(true)
         recyclerView!!.layoutManager =

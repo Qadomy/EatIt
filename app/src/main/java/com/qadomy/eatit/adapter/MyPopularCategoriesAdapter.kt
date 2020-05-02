@@ -12,13 +12,18 @@ import com.qadomy.eatit.R
 import com.qadomy.eatit.model.PopularCategoryModel
 
 class MyPopularCategoriesAdapter(
-    private var context: Context,
+    internal var context: Context,
     internal var popularCategoryModel: List<PopularCategoryModel>
 ) : RecyclerView.Adapter<MyPopularCategoriesAdapter.MyViewHolder>() {
     inner class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
-        var categoryImage: ImageView = itemView.findViewById(R.id.category_image)
-        var categoryName: TextView = itemView.findViewById(R.id.category_name)
+        var categoryImage: ImageView? = null
+        var categoryName: TextView? = null
+
+        init {
+            categoryImage = itemView.findViewById(R.id.category_image)
+            categoryName = itemView.findViewById(R.id.category_name)
+        }
 
 
     }
