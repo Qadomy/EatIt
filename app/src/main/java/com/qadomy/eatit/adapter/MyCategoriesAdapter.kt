@@ -9,22 +9,40 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.qadomy.eatit.R
+import com.qadomy.eatit.callback.IRecycleItemClickListener
 import com.qadomy.eatit.common.Common
+import com.qadomy.eatit.eventbus.CategoryClick
 import com.qadomy.eatit.model.CategoryModel
+import org.greenrobot.eventbus.EventBus
 
 class MyCategoriesAdapter(
     internal var context: Context,
     internal var categoriesList: List<CategoryModel>
 ) : RecyclerView.Adapter<MyCategoriesAdapter.MyViewHolder>() {
 
-    inner class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    inner class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView),
+        View.OnClickListener {
 
         var categoryName: TextView? = null
         var categoryIamge: ImageView? = null
 
+        // for recycle item click
+        internal var listener: IRecycleItemClickListener? = null
+
+        fun setListener(listener: IRecycleItemClickListener) {
+            this.listener = listener
+        }
+
         init {
             categoryIamge = itemView.findViewById(R.id.category_image)
             categoryName = itemView.findViewById(R.id.category_name)
+
+            // here when click in item
+            itemView.setOnClickListener(this)
+        }
+
+        override fun onClick(view: View?) {
+            listener!!.onItemClick(view!!, adapterPosition)
         }
 
     }
@@ -42,6 +60,14 @@ class MyCategoriesAdapter(
         Glide.with(context).load(categoriesList.get(position).image)
             .into(holder.categoryIamge!!)
         holder.categoryName!!.text = categoriesList.get(position).name
+
+        // Event
+        holder.setListener(object : IRecycleItemClickListener {
+            override fun onItemClick(view: View, pos: Int) {
+                Common.CATEGORY_SELECTED = categoriesList.get(pos)
+                EventBus.getDefault().postSticky(CategoryClick(true, categoriesList.get(pos)))
+            }
+        })
     }
 
 
