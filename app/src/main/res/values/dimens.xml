@@ -10,4 +10,5 @@
     <dimen name="eight_dp">8dp</dimen>
     <dimen name="home_fragment_title_text_size">24sp</dimen>
     <dimen name="twenty_sp">20sp</dimen>
+
 </resources>

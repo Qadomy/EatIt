@@ -9,7 +9,11 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.qadomy.eatit.R
+import com.qadomy.eatit.callback.IRecycleItemClickListener
+import com.qadomy.eatit.common.Common
+import com.qadomy.eatit.eventbus.FoodItemClick
 import com.qadomy.eatit.model.FoodModel
+import org.greenrobot.eventbus.EventBus
 
 class MyFoodListAdapter(
     internal var context: Context,
@@ -34,15 +38,33 @@ class MyFoodListAdapter(
         holder.txtFoodName!!.text = foodList.get(position).name
         holder.txtFoodPrice!!.text = foodList.get(position).price.toString()
 
+
+        // Event Bus
+        holder.setListener(object : IRecycleItemClickListener {
+            override fun onItemClick(view: View, pos: Int) {
+                Common.FOOD_SELECTED = foodList.get(pos)
+                EventBus.getDefault().postSticky(FoodItemClick(true, foodList.get(pos)))
+            }
+        })
+
     }
 
-    inner class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    inner class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView),
+        View.OnClickListener {
 
         var txtFoodName: TextView? = null
         var txtFoodPrice: TextView? = null
         var imgFoodimage: ImageView? = null
         var imgFav: ImageView? = null
         var imgCart: ImageView? = null
+
+
+        // for recycle item click
+        internal var listener: IRecycleItemClickListener? = null
+
+        fun setListener(listener: IRecycleItemClickListener) {
+            this.listener = listener
+        }
 
 
         init {
@@ -52,6 +74,13 @@ class MyFoodListAdapter(
             imgFav = itemView.findViewById(R.id.img_fav)
             imgCart = itemView.findViewById(R.id.img_quick_cart)
 
+            // here when click in item
+            itemView.setOnClickListener(this)
+
+        }
+
+        override fun onClick(view: View?) {
+            listener!!.onItemClick(view!!, adapterPosition)
         }
 
     }

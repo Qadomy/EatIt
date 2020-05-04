@@ -1,9 +1,11 @@
 package com.qadomy.eatit.common
 
 import com.qadomy.eatit.model.CategoryModel
+import com.qadomy.eatit.model.FoodModel
 import com.qadomy.eatit.model.UserModel
 
 object Common {
+    var FOOD_SELECTED: FoodModel? = null
     var CATEGORY_SELECTED: CategoryModel? = null
     val DEFAULT_COLUMN_COUNT: Int = 0
     val FULL_WIDTH_COLUMN: Int = 1

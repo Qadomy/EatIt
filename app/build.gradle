@@ -98,5 +98,11 @@ dependencies {
     // Event Bus
     implementation 'org.greenrobot:eventbus:3.2.0'
 
+    // Elegant Number Button
+    implementation 'com.cepheuen.elegant-number-button:lib:1.0.2'
+
+    // counter fab
+    implementation 'com.github.andremion:counterfab:1.2.0'
+
 
 }
