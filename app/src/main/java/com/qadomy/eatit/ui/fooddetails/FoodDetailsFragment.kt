@@ -18,6 +18,7 @@ import com.qadomy.eatit.R
 import com.qadomy.eatit.common.Common
 import com.qadomy.eatit.model.CommentModel
 import com.qadomy.eatit.model.FoodModel
+import com.qadomy.eatit.ui.comment.CommentFragment
 import dmax.dialog.SpotsDialog
 
 class FoodDetailsFragment : Fragment() {
@@ -148,10 +149,17 @@ class FoodDetailsFragment : Fragment() {
         btnShowComment = root!!.findViewById(R.id.btnShowComment)
 
 
-        // Event
+        // When click on add rating and comment button (star button in design)
         btnRating!!.setOnClickListener {
             showDialogRating()
         }
+
+        // when click on Show comments button in design
+        btnShowComment!!.setOnClickListener {
+            val commentFragment = CommentFragment.getInstance()
+            commentFragment.show(requireActivity().supportFragmentManager, "CommentFragment")
+        }
+
 
     }
 
