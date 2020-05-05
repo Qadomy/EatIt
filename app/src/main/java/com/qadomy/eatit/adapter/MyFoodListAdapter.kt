@@ -43,6 +43,7 @@ class MyFoodListAdapter(
         holder.setListener(object : IRecycleItemClickListener {
             override fun onItemClick(view: View, pos: Int) {
                 Common.FOOD_SELECTED = foodList.get(pos)
+                Common.FOOD_SELECTED!!.key = pos.toString()
                 EventBus.getDefault().postSticky(FoodItemClick(true, foodList.get(pos)))
             }
         })

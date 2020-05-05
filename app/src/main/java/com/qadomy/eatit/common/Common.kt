@@ -5,6 +5,7 @@ import com.qadomy.eatit.model.FoodModel
 import com.qadomy.eatit.model.UserModel
 
 object Common {
+    val COMMENT_REF: String = "Comments"
     var FOOD_SELECTED: FoodModel? = null
     var CATEGORY_SELECTED: CategoryModel? = null
     val DEFAULT_COLUMN_COUNT: Int = 0
