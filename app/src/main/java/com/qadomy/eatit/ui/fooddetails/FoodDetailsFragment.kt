@@ -20,6 +20,7 @@ import com.qadomy.eatit.model.CommentModel
 import com.qadomy.eatit.model.FoodModel
 import com.qadomy.eatit.ui.comment.CommentFragment
 import dmax.dialog.SpotsDialog
+import kotlinx.android.synthetic.main.food_details_fragment.*
 
 class FoodDetailsFragment : Fragment() {
 
@@ -33,6 +34,7 @@ class FoodDetailsFragment : Fragment() {
     private var numberButton: ElegantNumberButton? = null
     private var ratingBar: RatingBar? = null
     private var btnShowComment: Button? = null
+    private var radioGroupSize: RadioGroup? = null
 
     private var waitingDialog: android.app.AlertDialog? = null
 
@@ -130,7 +132,47 @@ class FoodDetailsFragment : Fragment() {
         foodDescriptoin!!.text = StringBuilder(it!!.description!!)
         foodPrice!!.text = StringBuilder(it!!.price!!.toString())
 
+        // set rating value in rating bar in screen
         ratingBar!!.rating = it!!.ratingValue.toFloat()
+
+        // set size for radio group
+        for (sizeModel in it!!.size) {
+            val radioButton = RadioButton(context)
+            radioButton.setOnCheckedChangeListener { compoundButton, b ->
+                if (b) {
+                    Common.FOOD_SELECTED!!.userSelectedSize = sizeModel
+                }
+                calculateTotalPrice()
+            }
+
+            val params = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1.0f)
+            radioButton.layoutParams = params
+            radioButton.text = sizeModel.name
+            radioButton.tag = sizeModel.price
+
+            radioGroupSize!!.addView(radioButton)
+
+            // Default first radio button select
+            if (radioGroupSize!!.childCount > 0) {
+                val radioButton = radioGroupSize!!.getChildAt(0) as RadioButton
+                radioButton.isChecked = true
+            }
+        }
+    }
+
+    private fun calculateTotalPrice() {
+        var totalprice = Common.FOOD_SELECTED!!.price.toDouble()
+        var displatPrice = 0.0
+
+        // size
+        totalprice += Common.FOOD_SELECTED!!.userSelectedSize!!.price!!.toDouble()
+
+        displatPrice = totalprice * number_button.number.toInt()
+        displatPrice = Math.round(displatPrice * 100.0) / 100.0
+
+        foodPrice!!.text =
+            java.lang.StringBuilder("").append(Common.formatPrice(displatPrice)).toString()
+
     }
 
     private fun initView(root: View?) {
@@ -147,6 +189,9 @@ class FoodDetailsFragment : Fragment() {
         numberButton = root!!.findViewById(R.id.number_button)
         ratingBar = root!!.findViewById(R.id.ratingBar)
         btnShowComment = root!!.findViewById(R.id.btnShowComment)
+
+        // radio group
+        radioGroupSize = root!!.findViewById(R.id.radio_group_size)
 
 
         // When click on add rating and comment button (star button in design)
