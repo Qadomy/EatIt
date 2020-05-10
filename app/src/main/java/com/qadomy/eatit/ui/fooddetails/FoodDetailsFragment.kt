@@ -1,6 +1,8 @@
 package com.qadomy.eatit.ui.fooddetails
 
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,6 +14,9 @@ import androidx.lifecycle.ViewModelProviders
 import com.andremion.counterfab.CounterFab
 import com.bumptech.glide.Glide
 import com.cepheuen.elegantnumberbutton.view.ElegantNumberButton
+import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.material.chip.Chip
+import com.google.android.material.chip.ChipGroup
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.database.*
 import com.qadomy.eatit.R
@@ -22,7 +27,9 @@ import com.qadomy.eatit.ui.comment.CommentFragment
 import dmax.dialog.SpotsDialog
 import kotlinx.android.synthetic.main.food_details_fragment.*
 
-class FoodDetailsFragment : Fragment() {
+class FoodDetailsFragment : Fragment(), TextWatcher {
+
+    private lateinit var addonBottomSheetDialog: BottomSheetDialog
 
     private lateinit var foodDetailsViewModel: FoodDetailsViewModel
     private var imgFood: ImageView? = null
@@ -36,6 +43,15 @@ class FoodDetailsFragment : Fragment() {
     private var btnShowComment: Button? = null
     private var radioGroupSize: RadioGroup? = null
 
+    // for addon section
+    private var imgAddOn: ImageView? = null
+    private var chipGroupUserSelectedAddon: ChipGroup? = null
+
+    // Addon layout
+    private var chipGroupAddon: ChipGroup? = null
+    private var edtSearchAddon: EditText? = null
+
+    // waiting dialog
     private var waitingDialog: android.app.AlertDialog? = null
 
 
@@ -160,9 +176,19 @@ class FoodDetailsFragment : Fragment() {
         }
     }
 
+    // function for calculate the total price of order
     private fun calculateTotalPrice() {
         var totalprice = Common.FOOD_SELECTED!!.price.toDouble()
         var displatPrice = 0.0
+
+        // Addon
+        if (Common.FOOD_SELECTED!!.userSelectedAddon != null
+            && Common.FOOD_SELECTED!!.userSelectedAddon!!.size > 0
+        ) {
+            for (addonModel in Common.FOOD_SELECTED!!.userSelectedAddon!!) {
+                totalprice += addonModel.price!!.toDouble()
+            }
+        }
 
         // size
         totalprice += Common.FOOD_SELECTED!!.userSelectedSize!!.price!!.toDouble()
@@ -176,23 +202,50 @@ class FoodDetailsFragment : Fragment() {
     }
 
     private fun initView(root: View?) {
+        // addon bottom sheet dialog 
+        addonBottomSheetDialog = BottomSheetDialog(requireContext(), R.style.DialogStyle)
+        val layout_user_selected_addon = layoutInflater.inflate(R.layout.layout_addon_display, null)
+        chipGroupAddon =
+            layout_user_selected_addon.findViewById(R.id.chip_groupa_addon) as ChipGroup
+        edtSearchAddon = layout_user_selected_addon.findViewById(R.id.edt_search) as EditText
+        addonBottomSheetDialog.setContentView(layout_user_selected_addon)
+        addonBottomSheetDialog.setOnDismissListener { dialogInterface ->
+            displayUserSelectAddon()
+            calculateTotalPrice()
+        }
+
+
         // dialog
         waitingDialog =
             SpotsDialog.Builder().setContext(requireContext()).setCancelable(false).build()
 
-        btnCart = root!!.findViewById(R.id.btn_cart)
-        imgFood = root!!.findViewById(R.id.img_food)
-        btnRating = root!!.findViewById(R.id.btn_rating)
-        foodName = root!!.findViewById(R.id.food_name)
-        foodDescriptoin = root!!.findViewById(R.id.food_description)
-        foodPrice = root!!.findViewById(R.id.food_price)
-        numberButton = root!!.findViewById(R.id.number_button)
-        ratingBar = root!!.findViewById(R.id.ratingBar)
-        btnShowComment = root!!.findViewById(R.id.btnShowComment)
+        btnCart = root!!.findViewById(R.id.btn_cart) as CounterFab
+        imgFood = root!!.findViewById(R.id.img_food) as ImageView
+        btnRating = root!!.findViewById(R.id.btn_rating) as FloatingActionButton
+        foodName = root!!.findViewById(R.id.food_name) as TextView
+        foodDescriptoin = root!!.findViewById(R.id.food_description) as TextView
+        foodPrice = root!!.findViewById(R.id.food_price) as TextView
+        numberButton = root!!.findViewById(R.id.number_button) as ElegantNumberButton
+        ratingBar = root!!.findViewById(R.id.ratingBar) as RatingBar
+        btnShowComment = root!!.findViewById(R.id.btnShowComment) as Button
+
+        // For addon section
+        imgAddOn = root!!.findViewById(R.id.img_add_addon) as ImageView
+        chipGroupUserSelectedAddon =
+            root!!.findViewById(R.id.chip_group_user_selected_addon) as ChipGroup
 
         // radio group
         radioGroupSize = root!!.findViewById(R.id.radio_group_size)
 
+
+        /** Events */
+        // when click on add button for Addon
+        imgAddOn!!.setOnClickListener {
+            if (Common.FOOD_SELECTED!!.addon!! != null) {
+                displayAllAddon()
+                addonBottomSheetDialog.show()
+            }
+        }
 
         // When click on add rating and comment button (star button in design)
         btnRating!!.setOnClickListener {
@@ -208,6 +261,35 @@ class FoodDetailsFragment : Fragment() {
 
     }
 
+
+    // function for display dilog and select addon to order
+    private fun displayUserSelectAddon() {
+        if (Common.FOOD_SELECTED!!.userSelectedAddon!! != null
+            && Common.FOOD_SELECTED!!.userSelectedAddon!!.size > 0
+        ) {
+            chipGroupUserSelectedAddon!!.removeAllViews()
+            for (addonModel in Common.FOOD_SELECTED!!.userSelectedAddon!!) {
+                val chip =
+                    layoutInflater.inflate(R.layout.layout_chip_with_delete, null, false) as Chip
+
+                chip.text =
+                    StringBuilder(addonModel!!.name!!).append("(+$").append(addonModel!!.price!!)
+                        .append(")").toString()
+
+                chip.isCheckable = false
+                chip.setOnCloseIconClickListener { view ->
+                    chip_group_user_selected_addon!!.removeView(view)
+                    Common.FOOD_SELECTED!!.userSelectedAddon!!.remove(addonModel)
+                    calculateTotalPrice()
+                }
+                chipGroupUserSelectedAddon!!.addView(chip)
+            }
+        } else if (Common.FOOD_SELECTED!!.userSelectedAddon!!.size == 0) {
+            chipGroupUserSelectedAddon!!.removeAllViews()
+        }
+    }
+
+    // function for show dispaly rating dialog
     private fun showDialogRating() {
         val builder = AlertDialog.Builder(requireContext())
         builder.setTitle("Rating Food")
@@ -237,6 +319,67 @@ class FoodDetailsFragment : Fragment() {
         val dialog = builder.create()
         dialog.show()
 
+    }
+
+
+    // function for display all addons for order
+    private fun displayAllAddon() {
+        if (Common.FOOD_SELECTED!!.addon!!.size > 0) {
+            chipGroupAddon!!.clearCheck()
+            chipGroupAddon!!.removeAllViews()
+
+            edtSearchAddon!!.addTextChangedListener(this)
+
+            for (addonModel in Common.FOOD_SELECTED!!.addon!!) {
+                val chip = layoutInflater.inflate(R.layout.layout_chip, null, false) as Chip
+                chip.text =
+                    StringBuilder(addonModel.name!!).append("(+$").append(addonModel.price!!)
+                        .append(")").toString()
+
+                chip.setOnCheckedChangeListener { compoundButton, b ->
+                    if (b) {
+                        if (Common.FOOD_SELECTED!!.userSelectedAddon == null) {
+                            Common.FOOD_SELECTED!!.userSelectedAddon = ArrayList()
+                        }
+                        Common.FOOD_SELECTED!!.userSelectedAddon!!.add(addonModel)
+                    }
+                }
+                chipGroupAddon!!.addView(chip)
+
+            }
+        }
+    }
+
+    // this 3 methods for addTextChanged
+    override fun afterTextChanged(s: Editable?) {
+
+    }
+
+    override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+
+    }
+
+    override fun onTextChanged(charSequesnce: CharSequence?, start: Int, before: Int, count: Int) {
+        chipGroupAddon!!.clearCheck()
+        chipGroupAddon!!.removeAllViews()
+        for (addonModel in Common.FOOD_SELECTED!!.addon!!) {
+            if (addonModel.name!!.toLowerCase().contains(charSequesnce.toString().toLowerCase())) {
+                val chip = layoutInflater.inflate(R.layout.layout_chip, null, false) as Chip
+                chip.text =
+                    StringBuilder(addonModel.name!!).append("(+$").append(addonModel.price!!)
+                        .append(")").toString()
+
+                chip.setOnCheckedChangeListener { compoundButton, b ->
+                    if (b) {
+                        if (Common.FOOD_SELECTED!!.userSelectedAddon == null) {
+                            Common.FOOD_SELECTED!!.userSelectedAddon = ArrayList()
+                        }
+                        Common.FOOD_SELECTED!!.userSelectedAddon!!.add(addonModel)
+                    }
+                }
+                chipGroupAddon!!.addView(chip)
+            }
+        }
     }
 
 
