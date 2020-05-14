@@ -16,6 +16,9 @@ class CartItem {
     @ColumnInfo(name = "foodName")
     var foodName: String? = null
 
+    @ColumnInfo(name = "foodImage")
+    var foodImage: String? = null
+
     @ColumnInfo(name = "foodPrice")
     var foodPrice: Double = 0.0
 

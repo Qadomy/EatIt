@@ -3,6 +3,11 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'com.google.gms.google-services'
 
+// we using this plugin cause room error message "cannot find implementation for
+// com.qadomy.eatit.database.CartDatabase. CartDatabase_Impl does not exist"
+
+apply plugin: 'kotlin-kapt'
+
 android {
     compileSdkVersion 29
     buildToolsVersion "29.0.3"
@@ -102,10 +107,10 @@ dependencies {
     implementation 'com.cepheuen.elegant-number-button:lib:1.0.2'
 
     // counter fab
-    implementation 'com.github.andremion:counterfab:1.2.0'
+    implementation 'com.github.andremion:counterfab:1.2.2-alpha1'
 
 
-    // Room rxjava
+    // Room RxJava
     implementation "androidx.room:room-rxjava2:2.2.5"
-    annotationProcessor "androidx.room:room-compiler:2.2.5"
+    kapt "androidx.room:room-compiler:2.2.5"
 }
