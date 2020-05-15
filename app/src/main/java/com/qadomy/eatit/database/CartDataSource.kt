@@ -1,6 +1,5 @@
 package com.qadomy.eatit.database
 
-import androidx.room.Query
 import io.reactivex.Completable
 import io.reactivex.Flowable
 import io.reactivex.Single
@@ -21,5 +20,12 @@ interface CartDataSource {
     fun deleteCart(cart: CartItem): Single<Int>
 
     fun cleanCart(uid: String): Single<Int>
+
+    fun getItemWithAllOptionsInCart(
+        uid: String,
+        foodId: String,
+        foodSize: String,
+        foodAddon: String
+    ): Single<CartItem>
 
 }
