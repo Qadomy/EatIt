@@ -49,11 +49,15 @@ class MyCartAdapter(
         holder.numberButton.number = cartItems[position].foodQuantity.toString()
 
         // Event, when click in elegant number button
-        holder.numberButton.setOnValueChangeListener { view, oldValue, newValue ->
+        holder.numberButton.setOnValueChangeListener { _, _, newValue ->
             cartItems[position].foodQuantity = newValue
             EventBus.getDefault().postSticky(UpdateItemInCart(cartItems[position]))
         }
 
+    }
+
+    fun getItemAtPosition(pos: Int): CartItem {
+        return cartItems[pos]
     }
 
 

@@ -32,4 +32,5 @@
     <string name="total_0_0">Total: 0,0</string>
     <string name="place_order">Place Order</string>
     <string name="cart">Cart</string>
+    <string name="action_clear_cart">Clear Cart</string>
 </resources>
