@@ -18,10 +18,10 @@
         tools:layout="@layout/fragment_category" />
 
     <fragment
-        android:id="@+id/nav_slideshow"
-        android:name="com.qadomy.eatit.ui.slideshow.SlideshowFragment"
-        android:label="@string/menu_slideshow"
-        tools:layout="@layout/fragment_slideshow" />
+        android:id="@+id/nav_cart"
+        android:name="com.qadomy.eatit.ui.cart.CartFragment"
+        android:label="@string/menu_cart"
+        tools:layout="@layout/fragment_cart" />
 
     <fragment
         android:id="@+id/nav_foodList"

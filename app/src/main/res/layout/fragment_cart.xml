@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_color"
+    android:orientation="vertical"
+    android:padding="@dimen/eight_dp"
+    tools:context=".ui.cart.CartFragment">
+
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_cart"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/group_place_holder"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/txt_empty_cart"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:layout_marginStart="@dimen/eight_dp"
+        android:layout_marginTop="@dimen/eight_dp"
+        android:layout_marginEnd="@dimen/eight_dp"
+        android:fontFamily="@font/brandon_medium"
+        android:text="@string/empty_cart"
+        android:textSize="35sp" />
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/group_place_holder"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/eight_dp"
+            android:orientation="vertical"
+            android:padding="@dimen/eight_dp">
+
+            <TextView
+                android:id="@+id/txt_total_price"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:layout_marginStart="@dimen/eight_dp"
+                android:layout_marginTop="@dimen/eight_dp"
+                android:layout_marginEnd="@dimen/eight_dp"
+                android:fontFamily="@font/brandon_medium"
+                android:text="@string/total_0_0"
+                android:textSize="24sp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_place_order"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/place_order" />
+
+        </LinearLayout>
+
+    </androidx.cardview.widget.CardView>
+
+</RelativeLayout>
