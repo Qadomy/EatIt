@@ -1,7 +1,10 @@
 package com.qadomy.eatit
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
+import android.view.MenuItem
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
@@ -14,6 +17,7 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.navigation.NavigationView
+import com.google.firebase.auth.FirebaseAuth
 import com.qadomy.eatit.common.Common
 import com.qadomy.eatit.database.CartDataSource
 import com.qadomy.eatit.database.CartDatabase
@@ -35,6 +39,7 @@ class HomeActivity : AppCompatActivity() {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var cartDataSource: CartDataSource
+    private lateinit var drawerLayout: DrawerLayout
 
     // navController
     private lateinit var navController: NavController
@@ -63,7 +68,7 @@ class HomeActivity : AppCompatActivity() {
             navController.navigate(R.id.nav_cart)
 
         }
-        val drawerLayout: DrawerLayout = findViewById(R.id.drawer_layout)
+        drawerLayout = findViewById(R.id.drawer_layout)
         val navView: NavigationView = findViewById(R.id.nav_view)
         navController = findNavController(R.id.nav_host_fragment)
         // Passing each menu ID as a set of Ids because each
@@ -76,9 +81,73 @@ class HomeActivity : AppCompatActivity() {
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
 
+        // for header view
+        var headerView = navView.getHeaderView(0)
+        var textUser = headerView.findViewById<TextView>(R.id.txt_user)
+        Common.setSpanString("Hey, ", Common.currentUser!!.name, textUser)
+
+
+        // when click on items in menu
+        navView.setNavigationItemSelectedListener(object :
+            NavigationView.OnNavigationItemSelectedListener {
+            override fun onNavigationItemSelected(item: MenuItem): Boolean {
+
+                item.isChecked = true
+                drawerLayout!!.closeDrawers() // Close all currently open drawer views by animating them out of view.
+
+
+                if (item.itemId == R.id.nav_sign_out) {
+                    // when click on sign out menu
+                    signOut()
+
+                } else if (item.itemId == R.id.nav_home) {
+                    navController.navigate(R.id.nav_home)
+                } else if (item.itemId == R.id.nav_menu) {
+                    navController.navigate(R.id.nav_menu)
+                } else if (item.itemId == R.id.nav_cart) {
+                    navController.navigate(R.id.nav_cart)
+                }
+                return true
+            }
+        })
 
         counterCartItem()
     }
+
+
+    // function when click on sign out menu
+    private fun signOut() {
+        val builder = androidx.appcompat.app.AlertDialog.Builder(this)
+        builder.setTitle("Sign out")
+            .setMessage("Are You Sure Want Exit?")
+            .setNegativeButton("CANCEL") { dialogInterface, _ -> dialogInterface.dismiss() }
+            .setPositiveButton("OK") { dialogInterface, _ ->
+                // when click on ok for sign out
+
+                Common.FOOD_SELECTED = null
+                Common.CATEGORY_SELECTED = null
+                Common.currentUser = null
+
+                // sign out form firebase
+                FirebaseAuth.getInstance().signOut()
+
+                // make intent to main activity "Register"
+                val intent = Intent(this@HomeActivity, MainActivity::class.java)
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                startActivity(intent)
+                finish()
+
+
+            }
+
+        val dialog = builder.create()
+        dialog.show()
+    }
+
+
+    /**
+     * Menu
+     */
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
