@@ -4,8 +4,8 @@ import android.graphics.Color
 import android.os.Bundle
 import android.os.Parcelable
 import android.view.*
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
+import androidx.appcompat.app.AlertDialog
 import androidx.cardview.widget.CardView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
@@ -38,6 +38,7 @@ class CartFragment : Fragment() {
     private var cartDataSource: CartDataSource? = null
     private var compositeDisposable: CompositeDisposable = CompositeDisposable()
     private var recyclerViewState: Parcelable? = null
+    private lateinit var placeOrderButton: Button
 
 
     private lateinit var cartViewModel: CartViewModel
@@ -182,6 +183,75 @@ class CartFragment : Fragment() {
         textEmptyCart = root.findViewById(R.id.txt_empty_cart) as TextView
         textTotalPrice = root.findViewById(R.id.txt_total_price) as TextView
         groupPlaceHolder = root.findViewById(R.id.group_place_holder) as CardView
+
+        placeOrderButton = root.findViewById(R.id.btn_place_order) as Button
+
+        // Event for Button place order
+        placeOrderButton.setOnClickListener {
+            val builder = AlertDialog.Builder(requireContext())
+            builder.setTitle("One more step!")
+
+            val view = LayoutInflater.from(context).inflate(R.layout.layout_place_order, null)
+
+            val edtAddress = view.findViewById<View>(R.id.order_edt_address) as EditText
+            val rdiHome = view.findViewById<View>(R.id.rdi_home_address) as RadioButton
+            val rdiOther = view.findViewById<View>(R.id.rdi_other_address) as RadioButton
+            val rdiShip = view.findViewById<View>(R.id.rdi_ship_this_address) as RadioButton
+            val rdiCod = view.findViewById<View>(R.id.rdi_cod) as RadioButton
+            val rdiBraintree = view.findViewById<View>(R.id.rdi_braintree) as RadioButton
+
+            // Data
+
+            // By default we checked rdi_home, so will display user address
+            edtAddress.setText(Common.currentUser!!.address!!)
+
+
+            // Event
+            rdiHome.setOnCheckedChangeListener { _, b ->
+                if (b) {
+                    // if we choose rdi home we set user address in text address
+                    edtAddress.setText(Common.currentUser!!.address!!)
+                }
+            }
+
+            rdiOther.setOnCheckedChangeListener { _, b ->
+                if (b) {
+                    // if we choose rdi other we delete the current address in edt address and let user choose another addres
+                    edtAddress.setText("")
+                    edtAddress.setHint("Enter Your Adderss")
+
+                }
+            }
+
+            rdiShip.setOnCheckedChangeListener { _, b ->
+                if (b) {
+
+                    // if choose rdi ship to this address, we choosen later from Google Api
+                    Toast.makeText(
+                        requireContext(),
+                        "Implement late with Google Api",
+                        Toast.LENGTH_SHORT
+                    ).show()
+
+                }
+            }
+
+
+            builder.setView(view)
+            builder.setNegativeButton("NO") { dialogInterface, _ -> dialogInterface.dismiss() }
+                .setPositiveButton("Yes") { dialogInterface, _ ->
+                    Toast.makeText(
+                        requireContext(),
+                        "Implement later",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+
+
+            val dialog = builder.create()
+            dialog.show()
+
+        }
     }
 
 
@@ -194,7 +264,7 @@ class CartFragment : Fragment() {
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(object : SingleObserver<Double> {
                 override fun onSuccess(t: Double) {
-                    textTotalPrice!!.text = StringBuilder("Total: ").append(t)
+                    textTotalPrice!!.text = StringBuilder("Total: $").append(t)
                 }
 
                 override fun onSubscribe(d: Disposable) {
@@ -254,7 +324,7 @@ class CartFragment : Fragment() {
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(object : SingleObserver<Double> {
                 override fun onSuccess(price: Double) {
-                    textTotalPrice!!.text = StringBuilder("Total: ")
+                    textTotalPrice!!.text = StringBuilder("Total: $")
                         .append(Common.formatPrice(price))
                 }
 
