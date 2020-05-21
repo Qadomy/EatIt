@@ -113,4 +113,11 @@ dependencies {
     // Room RxJava
     implementation "androidx.room:room-rxjava2:2.2.5"
     kapt "androidx.room:room-compiler:2.2.5"
+
+
+    // Dexter -> process of requesting permissions at runtime
+    implementation 'com.karumi:dexter:6.1.2'
+
+    // google play service location
+    implementation "com.google.android.gms:play-services-location:17.0.0"
 }

@@ -14,6 +14,12 @@ import com.firebase.ui.auth.IdpResponse
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.*
+import com.karumi.dexter.Dexter
+import com.karumi.dexter.PermissionToken
+import com.karumi.dexter.listener.PermissionDeniedResponse
+import com.karumi.dexter.listener.PermissionGrantedResponse
+import com.karumi.dexter.listener.PermissionRequest
+import com.karumi.dexter.listener.single.PermissionListener
 import com.qadomy.eatit.common.Common
 import com.qadomy.eatit.model.UserModel
 import dmax.dialog.SpotsDialog
@@ -64,14 +70,44 @@ class MainActivity : AppCompatActivity() {
         dialog = SpotsDialog.Builder().setContext(this).setCancelable(false).build()
         listener =
             FirebaseAuth.AuthStateListener { firebaseAuth ->
-                val user = firebaseAuth.currentUser
-                // if user login with phone number, check if it's in database
-                if (user != null) {
-                    checkUserFromFirebase(user)
-                } else {
-                    // if not login
-                    phoneLogin()
-                }
+
+                // request runtime permission
+                Dexter.withContext(this@MainActivity)
+                    .withPermission(android.Manifest.permission.ACCESS_FINE_LOCATION)
+                    .withListener(object : PermissionListener {
+                        override fun onPermissionGranted(p0: PermissionGrantedResponse?) {
+
+                            /**
+                             * if permission granted from user
+                             */
+                            val user = firebaseAuth.currentUser
+                            // if user login with phone number, check if it's in database
+                            if (user != null) {
+                                checkUserFromFirebase(user)
+                            } else {
+                                // if not login
+                                phoneLogin()
+                            }
+                        }
+
+                        override fun onPermissionRationaleShouldBeShown(
+                            p0: PermissionRequest?,
+                            p1: PermissionToken?
+                        ) {
+
+                        }
+
+                        override fun onPermissionDenied(p0: PermissionDeniedResponse?) {
+                            /** If Permission Denied form user */
+                            Toast.makeText(
+                                this@MainActivity,
+                                "You must accept this permission for using this application !!",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }).check()
+
+
             }
     }
 
@@ -187,7 +223,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun goToHomeActivity(userModel: UserModel?) {
         Common.currentUser = userModel!!
-        startActivity(Intent(this@MainActivity,HomeActivity::class.java))
+        startActivity(Intent(this@MainActivity, HomeActivity::class.java))
         finish()
     }
 }

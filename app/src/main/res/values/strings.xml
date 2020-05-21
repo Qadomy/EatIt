@@ -42,4 +42,5 @@
     <string name="payment_methods">Payment Methods</string>
     <string name="cash_on_delivary">Cash On Delivary</string>
     <string name="braintree">Braintree</string>
+    <string name="enter_comment">Enter Comment</string>
 </resources>

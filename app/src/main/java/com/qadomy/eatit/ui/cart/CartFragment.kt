@@ -1,7 +1,9 @@
 package com.qadomy.eatit.ui.cart
 
 import android.graphics.Color
+import android.location.Location
 import android.os.Bundle
+import android.os.Looper
 import android.os.Parcelable
 import android.view.*
 import android.widget.*
@@ -13,6 +15,7 @@ import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.gms.location.*
 import com.qadomy.eatit.R
 import com.qadomy.eatit.adapter.MyCartAdapter
 import com.qadomy.eatit.callback.IMyButtonCallback
@@ -35,18 +38,25 @@ import org.greenrobot.eventbus.ThreadMode
 
 class CartFragment : Fragment() {
 
+    // location
+    private lateinit var locationRequest: LocationRequest
+    private lateinit var locationCallback: LocationCallback
+    private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
+    private lateinit var currentLocation: Location
+
+    // Room database
     private var cartDataSource: CartDataSource? = null
     private var compositeDisposable: CompositeDisposable = CompositeDisposable()
     private var recyclerViewState: Parcelable? = null
+
     private lateinit var placeOrderButton: Button
-
-
     private lateinit var cartViewModel: CartViewModel
+
+    // views
     var textEmptyCart: TextView? = null
     var textTotalPrice: TextView? = null
     var groupPlaceHolder: CardView? = null
     var recyclerCart: RecyclerView? = null
-
     var adapter: MyCartAdapter? = null
 
     // onStart
@@ -57,11 +67,18 @@ class CartFragment : Fragment() {
         }
     }
 
-
     // onResume
     override fun onResume() {
         super.onResume()
         calculateTotalPrice()
+
+        // request again location when resume to app
+        if (fusedLocationProviderClient != null) {
+            fusedLocationProviderClient.requestLocationUpdates(
+                locationRequest, locationCallback,
+                Looper.getMainLooper()
+            )
+        }
     }
 
     // onCreateView
@@ -86,6 +103,9 @@ class CartFragment : Fragment() {
         // init views
         initView(root)
 
+        // init location
+        initLocation()
+
         cartViewModel.getMutableLiveDataCartItem().observe(viewLifecycleOwner, Observer {
             if (it == null || it.isEmpty()) {
                 // if there any items carts in database "ordered"
@@ -107,6 +127,71 @@ class CartFragment : Fragment() {
     }
 
 
+    // onStop, when stop screen we showing fab button
+    override fun onStop() {
+        cartViewModel!!.onStop()
+        compositeDisposable.clear()
+        EventBus.getDefault().postSticky(HideFABcart(false))
+        if (EventBus.getDefault().isRegistered(this)) {
+            EventBus.getDefault().unregister(this)
+        }
+
+        // remove location update when stop application
+        if (fusedLocationProviderClient != null) {
+            fusedLocationProviderClient.removeLocationUpdates(locationCallback)
+        }
+
+        super.onStop()
+    }
+
+    /**
+     *
+     *
+     * Functions related with user location
+     */
+
+    // init location
+    private fun initLocation() {
+        buildLocationRequest()
+        buildLocationCallback()
+
+        // fusedLocationProviderClient
+        fusedLocationProviderClient =
+            LocationServices.getFusedLocationProviderClient(requireContext())
+        fusedLocationProviderClient!!.requestLocationUpdates(
+            locationRequest, locationCallback,
+            Looper.getMainLooper() // Returns the application's main looper, which lives in the main thread of the application.
+        )
+
+    }
+
+    // build location callback
+    private fun buildLocationCallback() {
+        locationCallback = object : LocationCallback() {
+            override fun onLocationResult(p0: LocationResult?) {
+                super.onLocationResult(p0)
+
+                currentLocation = p0!!.lastLocation
+            }
+        }
+    }
+
+    // build location request
+    private fun buildLocationRequest() {
+        locationRequest = LocationRequest()
+        locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+        locationRequest.interval = 5000
+        locationRequest.fastestInterval = 3000
+        /** the smallest displacement in meters the user must move between location updates. */
+        locationRequest.smallestDisplacement = 10f
+    }
+
+
+    /**
+     *
+     *
+     * init views
+     */
     private fun initView(root: View) {
 
         // inflate menu
@@ -194,6 +279,8 @@ class CartFragment : Fragment() {
             val view = LayoutInflater.from(context).inflate(R.layout.layout_place_order, null)
 
             val edtAddress = view.findViewById<View>(R.id.order_edt_address) as EditText
+            val edtComment = view.findViewById<View>(R.id.order_edt_comment) as EditText
+            val txtAddress = view.findViewById<View>(R.id.order_txt_address_details) as TextView
             val rdiHome = view.findViewById<View>(R.id.rdi_home_address) as RadioButton
             val rdiOther = view.findViewById<View>(R.id.rdi_other_address) as RadioButton
             val rdiShip = view.findViewById<View>(R.id.rdi_ship_this_address) as RadioButton
@@ -211,6 +298,7 @@ class CartFragment : Fragment() {
                 if (b) {
                     // if we choose rdi home we set user address in text address
                     edtAddress.setText(Common.currentUser!!.address!!)
+                    txtAddress.visibility = View.GONE
                 }
             }
 
@@ -218,20 +306,36 @@ class CartFragment : Fragment() {
                 if (b) {
                     // if we choose rdi other we delete the current address in edt address and let user choose another addres
                     edtAddress.setText("")
-                    edtAddress.setHint("Enter Your Adderss")
-
+                    edtAddress.hint = "Enter Your Adderss"
+                    txtAddress.visibility = View.GONE
                 }
             }
 
             rdiShip.setOnCheckedChangeListener { _, b ->
                 if (b) {
 
-                    // if choose rdi ship to this address, we choosen later from Google Api
-                    Toast.makeText(
-                        requireContext(),
-                        "Implement late with Google Api",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    // we choose address from current location
+                    fusedLocationProviderClient!!.lastLocation
+                        .addOnFailureListener { e ->
+                            /** if failure getting location */
+                            txtAddress.visibility = View.GONE
+                            Toast.makeText(requireContext(), "" + e.message, Toast.LENGTH_SHORT)
+                                .show()
+                        }
+                        .addOnCompleteListener { task ->
+                            /** if complete getting location */
+                            val coordinates = StringBuilder()
+                                .append(task.result!!.latitude)
+                                .append("/")
+                                .append(task.result!!.longitude)
+                                .toString()
+
+                            edtAddress.setText(coordinates)
+
+                            txtAddress.visibility = View.VISIBLE
+                            txtAddress.text = "Implement late with Google API"
+
+                        }
 
                 }
             }
@@ -255,9 +359,7 @@ class CartFragment : Fragment() {
     }
 
 
-    /**
-     * Recalculate the sum of total price of order after delete items from cart
-     */
+    // Re-calculate the sum of total price of order after delete items from cart
     private fun sumCart() {
         cartDataSource!!.sumPrice(Common.currentUser!!.uid!!)
             .subscribeOn(Schedulers.io())
@@ -277,18 +379,6 @@ class CartFragment : Fragment() {
                 }
             })
 
-    }
-
-
-    // onStop, when stop screen we showing fab button
-    override fun onStop() {
-        super.onStop()
-        cartViewModel!!.onStop()
-        compositeDisposable.clear()
-        EventBus.getDefault().postSticky(HideFABcart(false))
-        if (EventBus.getDefault().isRegistered(this)) {
-            EventBus.getDefault().unregister(this)
-        }
     }
 
 
@@ -318,6 +408,7 @@ class CartFragment : Fragment() {
         }
     }
 
+    // calculate total price
     private fun calculateTotalPrice() {
         cartDataSource!!.sumPrice(Common.currentUser!!.uid!!)
             .subscribeOn(Schedulers.io())
@@ -346,12 +437,10 @@ class CartFragment : Fragment() {
      * For clear cart menu and delete all items once from cart and database
      */
 
-
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater!!.inflate(R.menu.cart_menu, menu)
         super.onCreateOptionsMenu(menu, inflater)
     }
-
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
 
