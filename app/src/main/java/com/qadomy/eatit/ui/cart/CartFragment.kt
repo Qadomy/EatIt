@@ -1,6 +1,7 @@
 package com.qadomy.eatit.ui.cart
 
 import android.graphics.Color
+import android.location.Geocoder
 import android.location.Location
 import android.os.Bundle
 import android.os.Looper
@@ -27,14 +28,18 @@ import com.qadomy.eatit.database.LocalCartDataSource
 import com.qadomy.eatit.eventbus.CountCartEvent
 import com.qadomy.eatit.eventbus.HideFABcart
 import com.qadomy.eatit.eventbus.UpdateItemInCart
+import io.reactivex.Single
 import io.reactivex.SingleObserver
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
+import io.reactivex.observers.DisposableSingleObserver
 import io.reactivex.schedulers.Schedulers
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
+import java.io.IOException
+import java.util.*
 
 class CartFragment : Fragment() {
 
@@ -330,10 +335,30 @@ class CartFragment : Fragment() {
                                 .append(task.result!!.longitude)
                                 .toString()
 
-                            edtAddress.setText(coordinates)
 
-                            txtAddress.visibility = View.VISIBLE
-                            txtAddress.text = "Implement late with Google API"
+                            // now we convert address form lat/lng to address name
+                            val singleAddress = Single.just(
+                                getAddressFromLatLng(
+                                    task.result!!.latitude,
+                                    task.result!!.longitude
+                                )
+                            )
+
+                            val disposable = singleAddress.subscribeWith(object :
+                                DisposableSingleObserver<String>() {
+                                override fun onSuccess(t: String) {
+                                    edtAddress.setText(coordinates)
+                                    txtAddress.visibility = View.VISIBLE
+                                    txtAddress.text = t
+                                }
+
+                                override fun onError(e: Throwable) {
+                                    edtAddress.setText(coordinates)
+                                    txtAddress.visibility = View.VISIBLE
+                                    txtAddress.text = e.message!!
+                                }
+                            })
+
 
                         }
 
@@ -355,6 +380,38 @@ class CartFragment : Fragment() {
             val dialog = builder.create()
             dialog.show()
 
+        }
+    }
+
+    // function for convert to address name
+    private fun getAddressFromLatLng(latitude: Double, longitude: Double): String {
+        // GeoCoder class make convert from locale lat/lng to address name
+        val geoCoder = Geocoder(requireContext(), Locale.getDefault())
+        var result: String? = null
+
+        try {
+            val addressList = geoCoder.getFromLocation(
+                latitude,
+                longitude,
+                1
+            ) // maxResult: max number of addresses to return
+
+            if (addressList != null && addressList.size > 0) {
+
+                val address = addressList[0]
+                val sb =
+                    StringBuilder(address.getAddressLine(0)) // getAddressLine: Returns a line of the address numbered by the given index
+
+                result = sb.toString()
+
+            } else {
+                result = "Address Not Found"
+            }
+
+            return result
+
+        } catch (e: IOException) {
+            return e.message!!
         }
     }
 
