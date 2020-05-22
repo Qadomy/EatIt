@@ -9,6 +9,8 @@ import android.widget.TextView
 import com.qadomy.eatit.model.*
 import java.math.RoundingMode
 import java.text.DecimalFormat
+import kotlin.math.abs
+import kotlin.random.Random
 
 object Common {
     fun formatPrice(price: Double): String {
@@ -59,6 +61,15 @@ object Common {
         textUser!!.setText(builder, TextView.BufferType.SPANNABLE)
     }
 
+    // function for create random order number
+    fun createOrderNumber(): String {
+        return StringBuilder()
+            .append(System.currentTimeMillis())// Returns the current time in milliseconds
+            .append(abs(Random.nextInt()))
+            .toString()
+    }
+
+    val ORDER_REF: String = "Order"
     val COMMENT_REF: String = "Comments"
     var FOOD_SELECTED: FoodModel? = null
     var CATEGORY_SELECTED: CategoryModel? = null

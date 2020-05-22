@@ -226,7 +226,7 @@ class HomeActivity : AppCompatActivity() {
             Log.d(TAG, "onPopularFoodItemClick")
             dialog!!.show()
 
-            // todo: not worked
+            // todo[NOT FIXED]: not worked
             try {
                 FirebaseDatabase.getInstance()
                     .getReference("Category")
@@ -316,7 +316,7 @@ class HomeActivity : AppCompatActivity() {
             Log.d(TAG, "onPopularFoodItemClick")
             dialog!!.show()
 
-            // todo: not worked
+            // todo[NOT FIXED]: not worked
             try {
                 FirebaseDatabase.getInstance()
                     .getReference("Category")

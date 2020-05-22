@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.gms.location.*
+import com.google.firebase.database.FirebaseDatabase
 import com.qadomy.eatit.R
 import com.qadomy.eatit.adapter.MyCartAdapter
 import com.qadomy.eatit.callback.IMyButtonCallback
@@ -28,6 +29,7 @@ import com.qadomy.eatit.database.LocalCartDataSource
 import com.qadomy.eatit.eventbus.CountCartEvent
 import com.qadomy.eatit.eventbus.HideFABcart
 import com.qadomy.eatit.eventbus.UpdateItemInCart
+import com.qadomy.eatit.model.Order
 import io.reactivex.Single
 import io.reactivex.SingleObserver
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -135,7 +137,7 @@ class CartFragment : Fragment() {
     // onStop, when stop screen we showing fab button
     override fun onStop() {
         cartViewModel!!.onStop()
-        compositeDisposable.clear()
+        compositeDisposable.clear() // dispose all of then at once
         EventBus.getDefault().postSticky(HideFABcart(false))
         if (EventBus.getDefault().isRegistered(this)) {
             EventBus.getDefault().unregister(this)
@@ -368,12 +370,11 @@ class CartFragment : Fragment() {
 
             builder.setView(view)
             builder.setNegativeButton("NO") { dialogInterface, _ -> dialogInterface.dismiss() }
-                .setPositiveButton("Yes") { dialogInterface, _ ->
-                    Toast.makeText(
-                        requireContext(),
-                        "Implement later",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                .setPositiveButton("Yes") { _, _ ->
+                    if (rdiCod.isChecked) {
+                        /** if choose payment by Cash on delivery "COD" */
+                        paymentCOD(edtAddress.text.toString(), edtComment.text.toString())
+                    }
                 }
 
 
@@ -381,6 +382,108 @@ class CartFragment : Fragment() {
             dialog.show()
 
         }
+    }
+
+    // function for payment by Cash on delivery "COD"
+    private fun paymentCOD(address: String, comment: String) {
+        compositeDisposable.addAll(
+            cartDataSource!!.getAllCart(Common.currentUser!!.uid!!)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({ cartItemList ->
+
+                    // when we have all cart items , we will get total price
+                    cartDataSource!!.sumPrice(Common.currentUser!!.uid!!)
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(object : SingleObserver<Double> {
+                            override fun onSuccess(totalPrice: Double) {
+
+                                val finalPrice = totalPrice
+                                val order = Order()
+                                order.userId = Common.currentUser!!.uid
+                                order.userName = Common.currentUser!!.name
+                                order.userPhone = Common.currentUser!!.phone
+                                order.shippingAddress = address
+                                order.comment = comment
+
+                                if (currentLocation != null) {
+                                    order.lat = currentLocation!!.latitude
+                                    order.lng = currentLocation!!.longitude
+                                }
+
+                                order.cartItemList = cartItemList
+                                order.totalPayment = totalPrice
+                                order.finalPayment = finalPrice
+                                order.discount = 0
+                                order.isCod = true
+                                order.transactionId = "Cash On Delivery"
+
+                                // submit to Firebase database
+                                writeOrdersToFirebase(order)
+                            }
+
+                            override fun onSubscribe(d: Disposable) {
+
+                            }
+
+                            override fun onError(e: Throwable) {
+                                Toast.makeText(context!!, "" + e.message, Toast.LENGTH_SHORT).show()
+                            }
+                        })
+
+                },
+                    { throwable ->
+                        Toast.makeText(
+                            requireContext(),
+                            "" + throwable.message,
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    })
+        )
+    }
+
+    // function for write orders to firebase database
+    private fun writeOrdersToFirebase(order: Order) {
+        FirebaseDatabase.getInstance()
+            .getReference(Common.ORDER_REF)
+            .child(Common.createOrderNumber())
+            .setValue(order)
+            .addOnFailureListener { e ->
+                /** if write to firebase failure */
+                Toast.makeText(
+                    requireContext(),
+                    "" + e.message,
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+            .addOnCompleteListener { task ->
+                /** if write to firebase successful */
+                if (task.isSuccessful) {
+                    // first thing we clean the cart items after we press place order button
+                    cartDataSource!!.cleanCart(Common.currentUser!!.uid!!)
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(object : SingleObserver<Int> {
+                            override fun onSuccess(t: Int) {
+                                Toast.makeText(
+                                    context!!,
+                                    "Order Placed Successfully",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+
+                            override fun onSubscribe(d: Disposable) {
+
+                            }
+
+                            override fun onError(e: Throwable) {
+                                Toast.makeText(context!!, "" + e.message, Toast.LENGTH_SHORT).show()
+                            }
+                        })
+                }
+            }
+
     }
 
     // function for convert to address name
