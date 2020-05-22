@@ -9,7 +9,9 @@ import android.widget.TextView
 import com.asksira.loopingviewpager.LoopingPagerAdapter
 import com.bumptech.glide.Glide
 import com.qadomy.eatit.R
+import com.qadomy.eatit.eventbus.BestDealItemClick
 import com.qadomy.eatit.model.BestDealModel
+import org.greenrobot.eventbus.EventBus
 
 class MyBestDealsAdapter(
     context: Context,
@@ -25,6 +27,11 @@ class MyBestDealsAdapter(
         Glide.with(context).load(itemList!![listPosition].image).into(imageView)
         textView.text = itemList!![listPosition].name
 
+
+        // when click on best deals food "Post event"
+        convertView.setOnClickListener {
+            EventBus.getDefault().postSticky(BestDealItemClick(itemList!![listPosition]))
+        }
 
     }
 

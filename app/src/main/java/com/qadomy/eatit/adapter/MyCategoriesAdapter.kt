@@ -64,8 +64,8 @@ class MyCategoriesAdapter(
         // Event
         holder.setListener(object : IRecycleItemClickListener {
             override fun onItemClick(view: View, pos: Int) {
-                Common.CATEGORY_SELECTED = categoriesList.get(pos)
-                EventBus.getDefault().postSticky(CategoryClick(true, categoriesList.get(pos)))
+                Common.CATEGORY_SELECTED = categoriesList[pos]
+                EventBus.getDefault().postSticky(CategoryClick(true, categoriesList[pos]))
             }
         })
     }

@@ -226,78 +226,84 @@ class HomeActivity : AppCompatActivity() {
             Log.d(TAG, "onPopularFoodItemClick")
             dialog!!.show()
 
-            FirebaseDatabase.getInstance()
-                .getReference("Category")
-                .child(event.popularCategoryModel!!.menuId!!)
-                .addListenerForSingleValueEvent(object : ValueEventListener {
-                    override fun onCancelled(p0: DatabaseError) {
-                        Log.d(TAG, "onCancelled 1")
+            // todo: not worked
+            try {
+                FirebaseDatabase.getInstance()
+                    .getReference("Category")
+                    .child(event.popularCategoryModel!!.menuId!!)
+                    .addListenerForSingleValueEvent(object : ValueEventListener {
+                        override fun onCancelled(p0: DatabaseError) {
+                            Log.d(TAG, "onCancelled 1")
 
-                        dialog!!.dismiss()
-                        Toast.makeText(this@HomeActivity, "" + p0.message, Toast.LENGTH_SHORT)
-                            .show()
-                    }
+                            dialog!!.dismiss()
+                            Toast.makeText(this@HomeActivity, "" + p0.message, Toast.LENGTH_SHORT)
+                                .show()
+                        }
 
-                    override fun onDataChange(p0: DataSnapshot) {
-                        if (p0.exists()) {
-                            Log.d(TAG, "onDataChange exists")
+                        override fun onDataChange(p0: DataSnapshot) {
+                            if (p0.exists()) {
+                                Log.d(TAG, "onDataChange exists")
 
-                            Common.CATEGORY_SELECTED = p0.getValue(CategoryModel::class.java)
-                            Common.CATEGORY_SELECTED!!.menuId = p0.key
+                                Common.CATEGORY_SELECTED = p0.getValue(CategoryModel::class.java)
+                                Common.CATEGORY_SELECTED!!.menuId = p0.key
 
-                            // load food from firebase
-                            FirebaseDatabase.getInstance()
-                                .getReference("Category")
-                                .child(event.popularCategoryModel!!.menuId!!)
-                                .child("foods")
-                                .orderByChild("id")
-                                .equalTo(event.popularCategoryModel.foodId)
-                                .limitToLast(1)//todo
-                                .addListenerForSingleValueEvent(object : ValueEventListener {
-                                    override fun onCancelled(p0: DatabaseError) {
+                                // load food from firebase
+                                FirebaseDatabase.getInstance()
+                                    .getReference("Category")
+                                    .child(event.popularCategoryModel!!.menuId!!)
+                                    .child("foods")
+                                    .orderByChild("id")
+                                    .equalTo(event.popularCategoryModel.foodId)
+                                    .limitToLast(1)
+                                    .addListenerForSingleValueEvent(object : ValueEventListener {
+                                        override fun onCancelled(p0: DatabaseError) {
 
-                                        Log.d(TAG, "onCancelled 2")
+                                            Log.d(TAG, "onCancelled 2")
 
-                                        dialog!!.dismiss()
-                                        Toast.makeText(
-                                            this@HomeActivity,
-                                            "" + p0.message,
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                    }
-
-                                    override fun onDataChange(p0: DataSnapshot) {
-                                        if (p0.exists()) {
-                                            Log.d(TAG, "onDataChange exists 2")
-
-                                            for (foodSnapShot in p0.children) {
-                                                Common.FOOD_SELECTED =
-                                                    foodSnapShot.getValue(FoodModel::class.java)
-                                                Common.FOOD_SELECTED!!.key = foodSnapShot.key
-                                            }
-                                            navController!!.navigate(R.id.nav_food_details)
-                                        } else {
+                                            dialog!!.dismiss()
                                             Toast.makeText(
                                                 this@HomeActivity,
-                                                "Item doesn't exist",
+                                                "" + p0.message,
                                                 Toast.LENGTH_SHORT
                                             ).show()
                                         }
-                                        dialog!!.dismiss()
 
-                                    }
-                                })
+                                        override fun onDataChange(p0: DataSnapshot) {
+                                            if (p0.exists()) {
+                                                Log.d(TAG, "onDataChange exists 2")
 
-                        } else {
-                            dialog!!.dismiss()
-                            Toast.makeText(
-                                this@HomeActivity,
-                                "Item doesn't exist",
-                                Toast.LENGTH_SHORT
-                            ).show()
+                                                for (foodSnapShot in p0.children) {
+                                                    Common.FOOD_SELECTED =
+                                                        foodSnapShot.getValue(FoodModel::class.java)
+                                                    Common.FOOD_SELECTED!!.key = foodSnapShot.key
+                                                }
+                                                navController!!.navigate(R.id.nav_food_details)
+                                            } else {
+                                                Toast.makeText(
+                                                    this@HomeActivity,
+                                                    "Item doesn't exist",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
+                                            dialog!!.dismiss()
+
+                                        }
+                                    })
+
+                            } else {
+                                dialog!!.dismiss()
+                                Toast.makeText(
+                                    this@HomeActivity,
+                                    "Item doesn't exist",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
                         }
-                    }
-                })
+                    })
+            } catch (e: Exception) {
+                dialog!!.dismiss()
+                Log.d(TAG, "message " + e.message)
+            }
         }
     }
 
@@ -310,6 +316,7 @@ class HomeActivity : AppCompatActivity() {
             Log.d(TAG, "onPopularFoodItemClick")
             dialog!!.show()
 
+            // todo: not worked
             try {
                 FirebaseDatabase.getInstance()
                     .getReference("Category")
@@ -337,7 +344,7 @@ class HomeActivity : AppCompatActivity() {
                                     .child("foods")
                                     .orderByChild("id")
                                     .equalTo(event.bestDealModel.foodId)
-                                    .limitToLast(1)//todo
+                                    .limitToLast(1)
                                     .addListenerForSingleValueEvent(object : ValueEventListener {
                                         override fun onCancelled(p0: DatabaseError) {
 
