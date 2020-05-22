@@ -129,15 +129,15 @@ class FoodDetailsFragment : Fragment(), TextWatcher {
                         //Apply rating
                         val sumRating = foodModel.ratingValue!! + ratingValue
                         val ratingCount = foodModel.ratingCount + 1
-                        val result = sumRating / ratingCount
+
 
                         val updateData = HashMap<String, Any>()
-                        updateData["ratingValue"] = result
+                        updateData["ratingValue"] = sumRating
                         updateData["reatingCount"] = ratingCount
 
                         // Update data is variable
                         foodModel.ratingCount = ratingCount
-                        foodModel.ratingValue = result
+                        foodModel.ratingValue = sumRating
 
 
                         dataSnapshot.ref.updateChildren(updateData)
@@ -166,7 +166,7 @@ class FoodDetailsFragment : Fragment(), TextWatcher {
         foodPrice!!.text = StringBuilder(it!!.price!!.toString())
 
         // set rating value in rating bar in screen
-        ratingBar!!.rating = it!!.ratingValue.toFloat()
+        ratingBar!!.rating = it!!.ratingValue.toFloat() / it!!.ratingCount
 
         // set size for radio group
         for (sizeModel in it!!.size) {

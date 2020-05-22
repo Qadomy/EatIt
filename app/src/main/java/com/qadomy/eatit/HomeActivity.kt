@@ -243,6 +243,7 @@ class HomeActivity : AppCompatActivity() {
                             Log.d(TAG, "onDataChange exists")
 
                             Common.CATEGORY_SELECTED = p0.getValue(CategoryModel::class.java)
+                            Common.CATEGORY_SELECTED!!.menuId = p0.key
 
                             // load food from firebase
                             FirebaseDatabase.getInstance()
@@ -272,6 +273,7 @@ class HomeActivity : AppCompatActivity() {
                                             for (foodSnapShot in p0.children) {
                                                 Common.FOOD_SELECTED =
                                                     foodSnapShot.getValue(FoodModel::class.java)
+                                                Common.FOOD_SELECTED!!.key = foodSnapShot.key
                                             }
                                             navController!!.navigate(R.id.nav_food_details)
                                         } else {
@@ -326,6 +328,7 @@ class HomeActivity : AppCompatActivity() {
                                 Log.d(TAG, "onDataChange exists")
 
                                 Common.CATEGORY_SELECTED = p0.getValue(CategoryModel::class.java)
+                                Common.CATEGORY_SELECTED!!.menuId = p0.key
 
                                 // load food from firebase
                                 FirebaseDatabase.getInstance()
@@ -355,6 +358,7 @@ class HomeActivity : AppCompatActivity() {
                                                 for (foodSnapShot in p0.children) {
                                                     Common.FOOD_SELECTED =
                                                         foodSnapShot.getValue(FoodModel::class.java)
+                                                    Common.FOOD_SELECTED!!.key = foodSnapShot.key
                                                 }
                                                 navController!!.navigate(R.id.nav_food_details)
                                             } else {
