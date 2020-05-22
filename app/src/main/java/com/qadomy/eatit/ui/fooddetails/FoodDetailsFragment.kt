@@ -426,7 +426,7 @@ class FoodDetailsFragment : Fragment(), TextWatcher {
     }
 
 
-    // function for display dilog and select addon to order
+    // function for display dialog and select addon to order
     private fun displayUserSelectAddon() {
         if (Common.FOOD_SELECTED!!.userSelectedAddon!! != null
             && Common.FOOD_SELECTED!!.userSelectedAddon!!.size > 0
@@ -448,12 +448,15 @@ class FoodDetailsFragment : Fragment(), TextWatcher {
                 }
                 chipGroupUserSelectedAddon!!.addView(chip)
             }
-        } else if (Common.FOOD_SELECTED!!.userSelectedAddon!!.size == 0) {
+        } else
+//            if (Common.FOOD_SELECTED!!.userSelectedAddon!!.size == 0)
+        {
+            // todo: error when close addon without chosen anything
             chipGroupUserSelectedAddon!!.removeAllViews()
         }
     }
 
-    // function for show dispaly rating dialog
+    // function for show display rating dialog
     private fun showDialogRating() {
         val builder = AlertDialog.Builder(requireContext())
         builder.setTitle("Rating Food")
