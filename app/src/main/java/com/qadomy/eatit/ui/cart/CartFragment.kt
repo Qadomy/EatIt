@@ -1,11 +1,14 @@
 package com.qadomy.eatit.ui.cart
 
+import android.app.Activity
+import android.content.Intent
 import android.graphics.Color
 import android.location.Geocoder
 import android.location.Location
 import android.os.Bundle
 import android.os.Looper
 import android.os.Parcelable
+import android.text.TextUtils
 import android.view.*
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
@@ -16,6 +19,8 @@ import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.braintreepayments.api.dropin.DropInRequest
+import com.braintreepayments.api.dropin.DropInResult
 import com.google.android.gms.location.*
 import com.google.firebase.database.FirebaseDatabase
 import com.qadomy.eatit.R
@@ -25,11 +30,14 @@ import com.qadomy.eatit.common.Common
 import com.qadomy.eatit.common.MySwipeHelper
 import com.qadomy.eatit.database.CartDataSource
 import com.qadomy.eatit.database.CartDatabase
+import com.qadomy.eatit.database.CartItem
 import com.qadomy.eatit.database.LocalCartDataSource
 import com.qadomy.eatit.eventbus.CountCartEvent
 import com.qadomy.eatit.eventbus.HideFABcart
 import com.qadomy.eatit.eventbus.UpdateItemInCart
 import com.qadomy.eatit.model.Order
+import com.qadomy.eatit.remote.ICloudFunctions
+import com.qadomy.eatit.remote.RetrofitCloudClient
 import io.reactivex.Single
 import io.reactivex.SingleObserver
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -66,6 +74,20 @@ class CartFragment : Fragment() {
     var recyclerCart: RecyclerView? = null
     var adapter: MyCartAdapter? = null
 
+    // for payment
+    internal var address: String = ""
+    internal var comment: String = ""
+
+    private val REQUEST_BRAINTREE_CODE: Int = 8888
+
+    lateinit var cloudFunctions: ICloudFunctions
+
+    /**
+     *
+     *
+     *
+     *
+     */
     // onStart
     override fun onStart() {
         super.onStart()
@@ -157,6 +179,9 @@ class CartFragment : Fragment() {
      * init views
      */
     private fun initView(root: View) {
+
+        // init cloud functions interface
+        cloudFunctions = RetrofitCloudClient.getInstance().create(ICloudFunctions::class.java)
 
         // inflate menu
         setHasOptionsMenu(true)
@@ -331,6 +356,19 @@ class CartFragment : Fragment() {
                     if (rdiCod.isChecked) {
                         /** if choose payment by Cash on delivery "COD" */
                         paymentCOD(edtAddress.text.toString(), edtComment.text.toString())
+                    } else if (rdiBraintree.isChecked) {
+                        /** if choose payment by Braintree */
+                        address = edtAddress.text.toString()
+                        comment = edtComment.text.toString()
+
+                        if (!TextUtils.isDigitsOnly(Common.CURRENT_TOKEN)) {
+                            val dropInRequest = DropInRequest().clientToken(Common.CURRENT_TOKEN)
+
+                            startActivityForResult(
+                                dropInRequest.getIntent(context),
+                                REQUEST_BRAINTREE_CODE
+                            )
+                        }
                     }
                 }
 
@@ -647,5 +685,107 @@ class CartFragment : Fragment() {
         super.onPrepareOptionsMenu(menu)
     }
 
+
+    /**
+     * onActivityResult
+     */
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_BRAINTREE_CODE) {
+            if (resultCode == Activity.RESULT_OK) {
+
+                val result =
+                    data!!.getParcelableExtra<DropInResult>(DropInRequest.EXTRA_CHECKOUT_REQUEST)
+
+                val nonce = result!!.paymentMethodNonce
+
+
+                // calculate sum cart
+                cartDataSource!!.sumPrice(Common.CURRENT_USER!!.uid!!)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(object : SingleObserver<Double> {
+                        override fun onSuccess(totalPrice: Double) {
+                            // Get all item to create cart
+                            compositeDisposable.add(
+                                cartDataSource!!.getAllCart(Common.CURRENT_USER!!.uid!!)
+                                    .subscribeOn(Schedulers.io())
+                                    .observeOn(AndroidSchedulers.mainThread())
+                                    .subscribe({ cartItem: List<CartItem>? ->
+
+                                        // After have all cart item, we will submit payment
+                                        compositeDisposable.add(
+                                            cloudFunctions.submitPayment(
+                                                totalPrice,
+                                                nonce!!.nonce
+                                            )
+                                                .subscribeOn(Schedulers.io())
+                                                .observeOn(AndroidSchedulers.mainThread())
+                                                .subscribe({ braintreeTransaction ->
+
+                                                    if (braintreeTransaction.success) {
+                                                        // create order
+                                                        val finalPrice = totalPrice
+                                                        val order = Order()
+                                                        order.userId = Common.CURRENT_USER!!.uid
+                                                        order.userName = Common.CURRENT_USER!!.name
+
+                                                        order.userPhone =
+                                                            Common.CURRENT_USER!!.phone
+
+                                                        order.shippingAddress = address
+                                                        order.comment = comment
+
+                                                        if (currentLocation != null) {
+                                                            order.lat = currentLocation!!.latitude
+                                                            order.lng = currentLocation!!.longitude
+                                                        }
+
+                                                        order.cartItemList = cartItem
+                                                        order.totalPayment = totalPrice
+                                                        order.finalPayment = finalPrice
+                                                        order.discount = 0
+                                                        order.isCod = false
+
+                                                        order.transactionId =
+                                                            braintreeTransaction.transaction!!.id
+
+                                                        // submit to Firebase database
+                                                        writeOrdersToFirebase(order)
+                                                    }
+
+                                                }, { t: Throwable? ->
+
+                                                    Toast.makeText(
+                                                        context!!,
+                                                        "" + t!!.message,
+                                                        Toast.LENGTH_SHORT
+                                                    )
+                                                        .show()
+                                                })
+                                        )
+
+                                    }, { t: Throwable? ->
+
+                                        Toast.makeText(
+                                            context!!,
+                                            "" + t!!.message,
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    })
+                            )
+                        }
+
+                        override fun onSubscribe(d: Disposable) {
+
+                        }
+
+                        override fun onError(e: Throwable) {
+                            Toast.makeText(context!!, "" + e.message, Toast.LENGTH_SHORT).show()
+                        }
+                    })
+            }
+        }
+    }
 
 }
