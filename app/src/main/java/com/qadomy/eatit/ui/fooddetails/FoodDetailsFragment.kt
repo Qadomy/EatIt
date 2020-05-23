@@ -283,8 +283,8 @@ class FoodDetailsFragment : Fragment(), TextWatcher {
         btnCart!!.setOnClickListener {
             val cartItem = CartItem()
 
-            cartItem.uid = Common.currentUser!!.uid
-            cartItem.userPhone = Common.currentUser!!.phone
+            cartItem.uid = Common.CURRENT_USER!!.uid
+            cartItem.userPhone = Common.CURRENT_USER!!.phone
 
             cartItem.foodId = Common.FOOD_SELECTED!!.id!!
             cartItem.foodName = Common.FOOD_SELECTED!!.name!!
@@ -314,7 +314,7 @@ class FoodDetailsFragment : Fragment(), TextWatcher {
 
 
             cartDataSource.getItemWithAllOptionsInCart(
-                Common.currentUser!!.uid!!,
+                Common.CURRENT_USER!!.uid!!,
                 cartItem.foodId,
                 cartItem.foodSize!!,
                 cartItem.foodAddon!!
@@ -471,8 +471,8 @@ class FoodDetailsFragment : Fragment(), TextWatcher {
         builder.setNegativeButton("CACNCEL") { dialogInterface, i -> dialogInterface.dismiss() }
         builder.setPositiveButton("OK") { dialogInterface, i ->
             val commentModel = CommentModel()
-            commentModel.name = Common.currentUser!!.name
-            commentModel.uid = Common.currentUser!!.uid
+            commentModel.name = Common.CURRENT_USER!!.name
+            commentModel.uid = Common.CURRENT_USER!!.uid
             commentModel.comment = edtCommnet.text.toString()
             commentModel.ratingValue = ratingBarFromDialog.rating
 

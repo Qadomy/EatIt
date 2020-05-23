@@ -68,6 +68,11 @@ class MainActivity : AppCompatActivity() {
         init()
     }
 
+
+    /**
+     *
+     * init
+     */
     private fun init() {
         providers = listOf(AuthUI.IdpConfig.PhoneBuilder().build())
 

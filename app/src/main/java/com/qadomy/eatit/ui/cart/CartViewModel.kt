@@ -37,7 +37,7 @@ class CartViewModel : ViewModel() {
 
     private fun getCartItems() {
         compositeDisposable.addAll(
-            cartDataSource!!.getAllCart(Common.currentUser!!.uid!!)
+            cartDataSource!!.getAllCart(Common.CURRENT_USER!!.uid!!)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({ cartItems ->

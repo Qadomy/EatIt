@@ -254,14 +254,14 @@ class CartFragment : Fragment() {
             // Data
 
             // By default we checked rdi_home, so will display user address
-            edtAddress.setText(Common.currentUser!!.address!!)
+            edtAddress.setText(Common.CURRENT_USER!!.address!!)
 
 
             // Event
             rdiHome.setOnCheckedChangeListener { _, b ->
                 if (b) {
                     // if we choose rdi home we set user address in text address
-                    edtAddress.setText(Common.currentUser!!.address!!)
+                    edtAddress.setText(Common.CURRENT_USER!!.address!!)
                     txtAddress.visibility = View.GONE
                 }
             }
@@ -394,13 +394,13 @@ class CartFragment : Fragment() {
     // function for payment by Cash on delivery "COD"
     private fun paymentCOD(address: String, comment: String) {
         compositeDisposable.addAll(
-            cartDataSource!!.getAllCart(Common.currentUser!!.uid!!)
+            cartDataSource!!.getAllCart(Common.CURRENT_USER!!.uid!!)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({ cartItemList ->
 
                     // when we have all cart items , we will get total price
-                    cartDataSource!!.sumPrice(Common.currentUser!!.uid!!)
+                    cartDataSource!!.sumPrice(Common.CURRENT_USER!!.uid!!)
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(object : SingleObserver<Double> {
@@ -408,9 +408,9 @@ class CartFragment : Fragment() {
 
                                 val finalPrice = totalPrice
                                 val order = Order()
-                                order.userId = Common.currentUser!!.uid
-                                order.userName = Common.currentUser!!.name
-                                order.userPhone = Common.currentUser!!.phone
+                                order.userId = Common.CURRENT_USER!!.uid
+                                order.userName = Common.CURRENT_USER!!.name
+                                order.userPhone = Common.CURRENT_USER!!.phone
                                 order.shippingAddress = address
                                 order.comment = comment
 
@@ -468,7 +468,7 @@ class CartFragment : Fragment() {
                 /** if write to firebase successful */
                 if (task.isSuccessful) {
                     // first thing we clean the cart items after we press place order button
-                    cartDataSource!!.cleanCart(Common.currentUser!!.uid!!)
+                    cartDataSource!!.cleanCart(Common.CURRENT_USER!!.uid!!)
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(object : SingleObserver<Int> {
@@ -527,7 +527,7 @@ class CartFragment : Fragment() {
 
     // Re-calculate the sum of total price of order after delete items from cart
     private fun sumCart() {
-        cartDataSource!!.sumPrice(Common.currentUser!!.uid!!)
+        cartDataSource!!.sumPrice(Common.CURRENT_USER!!.uid!!)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(object : SingleObserver<Double> {
@@ -549,7 +549,7 @@ class CartFragment : Fragment() {
 
     // calculate total price
     private fun calculateTotalPrice() {
-        cartDataSource!!.sumPrice(Common.currentUser!!.uid!!)
+        cartDataSource!!.sumPrice(Common.CURRENT_USER!!.uid!!)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(object : SingleObserver<Double> {
@@ -617,7 +617,7 @@ class CartFragment : Fragment() {
 
         if (item!!.itemId == R.id.action_clear_cart) {
 
-            cartDataSource!!.cleanCart(Common.currentUser!!.uid!!)
+            cartDataSource!!.cleanCart(Common.CURRENT_USER!!.uid!!)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(object : SingleObserver<Int> {

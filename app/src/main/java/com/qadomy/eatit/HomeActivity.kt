@@ -90,7 +90,7 @@ class HomeActivity : AppCompatActivity() {
         // for header view
         var headerView = navView.getHeaderView(0)
         var textUser = headerView.findViewById<TextView>(R.id.txt_user)
-        Common.setSpanString("Hey, ", Common.currentUser!!.name, textUser)
+        Common.setSpanString("Hey, ", Common.CURRENT_USER!!.name, textUser)
 
 
         // when click on items in menu
@@ -142,7 +142,7 @@ class HomeActivity : AppCompatActivity() {
 
                 Common.FOOD_SELECTED = null
                 Common.CATEGORY_SELECTED = null
-                Common.currentUser = null
+                Common.CURRENT_USER = null
 
                 // sign out form firebase
                 FirebaseAuth.getInstance().signOut()
@@ -409,7 +409,7 @@ class HomeActivity : AppCompatActivity() {
 
     private fun counterCartItem() {
         // create RxJava
-        cartDataSource.countItemInCart(Common.currentUser!!.uid!!)
+        cartDataSource.countItemInCart(Common.CURRENT_USER!!.uid!!)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(object : SingleObserver<Int> {

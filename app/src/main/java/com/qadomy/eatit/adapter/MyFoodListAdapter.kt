@@ -75,8 +75,8 @@ class MyFoodListAdapter(
         holder.imgCart!!.setOnClickListener {
             val cartItem = CartItem()
 
-            cartItem.uid = Common.currentUser!!.uid
-            cartItem.userPhone = Common.currentUser!!.phone
+            cartItem.uid = Common.CURRENT_USER!!.uid
+            cartItem.userPhone = Common.CURRENT_USER!!.phone
 
             cartItem.foodId = foodList[position].id!!
             cartItem.foodName = foodList[position].name!!
@@ -89,7 +89,7 @@ class MyFoodListAdapter(
 
 
             cartDataSource.getItemWithAllOptionsInCart(
-                Common.currentUser!!.uid!!,
+                Common.CURRENT_USER!!.uid!!,
                 cartItem.foodId,
                 cartItem.foodSize!!,
                 cartItem.foodAddon!!
