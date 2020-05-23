@@ -88,6 +88,23 @@ class CartFragment : Fragment() {
         }
     }
 
+    // onStop, when stop screen we showing fab button
+    override fun onStop() {
+        cartViewModel!!.onStop()
+        compositeDisposable.clear() // dispose all of then at once
+        EventBus.getDefault().postSticky(HideFABcart(false))
+        if (EventBus.getDefault().isRegistered(this)) {
+            EventBus.getDefault().unregister(this)
+        }
+
+        // remove location update when stop application
+        if (fusedLocationProviderClient != null) {
+            fusedLocationProviderClient.removeLocationUpdates(locationCallback)
+        }
+
+        super.onStop()
+    }
+
     // onCreateView
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -131,66 +148,6 @@ class CartFragment : Fragment() {
         })
 
         return root
-    }
-
-
-    // onStop, when stop screen we showing fab button
-    override fun onStop() {
-        cartViewModel!!.onStop()
-        compositeDisposable.clear() // dispose all of then at once
-        EventBus.getDefault().postSticky(HideFABcart(false))
-        if (EventBus.getDefault().isRegistered(this)) {
-            EventBus.getDefault().unregister(this)
-        }
-
-        // remove location update when stop application
-        if (fusedLocationProviderClient != null) {
-            fusedLocationProviderClient.removeLocationUpdates(locationCallback)
-        }
-
-        super.onStop()
-    }
-
-    /**
-     *
-     *
-     * Functions related with user location
-     */
-
-    // init location
-    private fun initLocation() {
-        buildLocationRequest()
-        buildLocationCallback()
-
-        // fusedLocationProviderClient
-        fusedLocationProviderClient =
-            LocationServices.getFusedLocationProviderClient(requireContext())
-        fusedLocationProviderClient!!.requestLocationUpdates(
-            locationRequest, locationCallback,
-            Looper.getMainLooper() // Returns the application's main looper, which lives in the main thread of the application.
-        )
-
-    }
-
-    // build location callback
-    private fun buildLocationCallback() {
-        locationCallback = object : LocationCallback() {
-            override fun onLocationResult(p0: LocationResult?) {
-                super.onLocationResult(p0)
-
-                currentLocation = p0!!.lastLocation
-            }
-        }
-    }
-
-    // build location request
-    private fun buildLocationRequest() {
-        locationRequest = LocationRequest()
-        locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-        locationRequest.interval = 5000
-        locationRequest.fastestInterval = 3000
-        /** the smallest displacement in meters the user must move between location updates. */
-        locationRequest.smallestDisplacement = 10f
     }
 
 
@@ -384,6 +341,56 @@ class CartFragment : Fragment() {
         }
     }
 
+
+    /**
+     *
+     *
+     * Functions related with user location
+     */
+
+    // init location
+    private fun initLocation() {
+        buildLocationRequest()
+        buildLocationCallback()
+
+        // fusedLocationProviderClient
+        fusedLocationProviderClient =
+            LocationServices.getFusedLocationProviderClient(requireContext())
+        fusedLocationProviderClient!!.requestLocationUpdates(
+            locationRequest, locationCallback,
+            Looper.getMainLooper() // Returns the application's main looper, which lives in the main thread of the application.
+        )
+
+    }
+
+    // build location callback
+    private fun buildLocationCallback() {
+        locationCallback = object : LocationCallback() {
+            override fun onLocationResult(p0: LocationResult?) {
+                super.onLocationResult(p0)
+
+                currentLocation = p0!!.lastLocation
+            }
+        }
+    }
+
+    // build location request
+    private fun buildLocationRequest() {
+        locationRequest = LocationRequest()
+        locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+        locationRequest.interval = 5000
+        locationRequest.fastestInterval = 3000
+        /** the smallest displacement in meters the user must move between location updates. */
+        locationRequest.smallestDisplacement = 10f
+    }
+
+
+    /**
+     *
+     * Functions
+     */
+
+
     // function for payment by Cash on delivery "COD"
     private fun paymentCOD(address: String, comment: String) {
         compositeDisposable.addAll(
@@ -518,7 +525,6 @@ class CartFragment : Fragment() {
         }
     }
 
-
     // Re-calculate the sum of total price of order after delete items from cart
     private fun sumCart() {
         cartDataSource!!.sumPrice(Common.currentUser!!.uid!!)
@@ -541,6 +547,34 @@ class CartFragment : Fragment() {
 
     }
 
+    // calculate total price
+    private fun calculateTotalPrice() {
+        cartDataSource!!.sumPrice(Common.currentUser!!.uid!!)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(object : SingleObserver<Double> {
+                override fun onSuccess(price: Double) {
+                    textTotalPrice!!.text = StringBuilder("Total: $")
+                        .append(Common.formatPrice(price))
+                }
+
+                override fun onSubscribe(d: Disposable) {
+
+                }
+
+                override fun onError(e: Throwable) {
+                    if (!e.message!!.contains("Query returned empty"))
+                        Toast.makeText(context, "[SUM CART]" + e.message, Toast.LENGTH_SHORT)
+                            .show()
+                }
+            })
+    }
+
+
+    /**
+     *
+     * Event Bus
+     */
 
     // Event for change total price
     @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
@@ -566,29 +600,6 @@ class CartFragment : Fragment() {
                     }
                 })
         }
-    }
-
-    // calculate total price
-    private fun calculateTotalPrice() {
-        cartDataSource!!.sumPrice(Common.currentUser!!.uid!!)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(object : SingleObserver<Double> {
-                override fun onSuccess(price: Double) {
-                    textTotalPrice!!.text = StringBuilder("Total: $")
-                        .append(Common.formatPrice(price))
-                }
-
-                override fun onSubscribe(d: Disposable) {
-
-                }
-
-                override fun onError(e: Throwable) {
-                    if (!e.message!!.contains("Query returned empty"))
-                        Toast.makeText(context, "[SUM CART]" + e.message, Toast.LENGTH_SHORT)
-                            .show()
-                }
-            })
     }
 
 
@@ -629,7 +640,6 @@ class CartFragment : Fragment() {
 
         return super.onOptionsItemSelected(item)
     }
-
 
     // hide setting menu when in cart screen
     override fun onPrepareOptionsMenu(menu: Menu) {
