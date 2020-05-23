@@ -69,15 +69,16 @@ object Common {
             .toString()
     }
 
-    val ORDER_REF: String = "Order"
-    val COMMENT_REF: String = "Comments"
+    var CURRENT_TOKEN: String = ""
+    var CURRENT_USER: UserModel? = null
     var FOOD_SELECTED: FoodModel? = null
     var CATEGORY_SELECTED: CategoryModel? = null
-    val DEFAULT_COLUMN_COUNT: Int = 0
-    val FULL_WIDTH_COLUMN: Int = 1
-    const val BESST_DEALS_REF: String = "BestDeals"
+    const val ORDER_REF: String = "Order"
+    const val COMMENT_REF: String = "Comments"
+    const val DEFAULT_COLUMN_COUNT: Int = 0
+    const val FULL_WIDTH_COLUMN: Int = 1
+    const val BEST_DEALS_REF: String = "BestDeals"
     const val POPULAR_REF: String = "MostPopular"
     const val USER_REFERENCE = "Users"
-    val CATEGORY_REF: String = "Category"
-    var currentUser: UserModel? = null
+    const val CATEGORY_REF: String = "Category"
 }

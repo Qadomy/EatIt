@@ -22,8 +22,12 @@ import com.karumi.dexter.listener.PermissionRequest
 import com.karumi.dexter.listener.single.PermissionListener
 import com.qadomy.eatit.common.Common
 import com.qadomy.eatit.model.UserModel
+import com.qadomy.eatit.remote.ICloudFunctions
+import com.qadomy.eatit.remote.RetrofitCloudClient
 import dmax.dialog.SpotsDialog
+import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.schedulers.Schedulers
 
 class MainActivity : AppCompatActivity() {
 
@@ -33,6 +37,8 @@ class MainActivity : AppCompatActivity() {
     private val compositeDisposable = CompositeDisposable()
     private lateinit var firebaseAuth: FirebaseAuth
     private var providers: List<AuthUI.IdpConfig>? = null
+
+    private lateinit var cloudFunctions: ICloudFunctions
 
 
     companion object {
@@ -109,6 +115,10 @@ class MainActivity : AppCompatActivity() {
 
 
             }
+
+
+        // init cloud functions interface
+        cloudFunctions = RetrofitCloudClient.getInstance().create(ICloudFunctions::class.java)
     }
 
     private fun phoneLogin() {
@@ -141,18 +151,35 @@ class MainActivity : AppCompatActivity() {
 
             override fun onDataChange(p0: DataSnapshot) {
                 if (p0.exists()) {
-                    // if user exists in database get the full info from database and send it to home page (Profile)
-                    val userModel = p0.getValue(UserModel::class.java)
-                    goToHomeActivity(userModel)
+
+                    compositeDisposable.add(
+                        cloudFunctions!!.getToken()
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribe({ braintreeToken ->
+
+                                dialog!!.dismiss()
+                                val userModel = p0.getValue(UserModel::class.java)
+                                goToHomeActivity(userModel, braintreeToken.token)
+
+                            }, { throwable ->
+                                /** if happened error */
+                                dialog!!.dismiss()
+                                Toast.makeText(
+                                    this@MainActivity,
+                                    "" + throwable.message,
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            })
+                    )
 
                 } else {
+                    // dismiss the dialog
+                    dialog.dismiss()
+
                     // if user not exists open register dialog
                     showRegisterDialog(user)
-
                 }
-
-                // dismiss the dialog
-                dialog.dismiss()
             }
 
         })
@@ -203,14 +230,32 @@ class MainActivity : AppCompatActivity() {
                 .addOnCompleteListener { task ->
                     /** if data saved successfully in database */
                     if (task.isSuccessful) {
-                        dialogInterface.dismiss()
-                        Toast.makeText(
-                            this@MainActivity,
-                            "Congratulations! Register success",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        // and go to home profile
-                        goToHomeActivity(userModel)
+
+                        compositeDisposable.add(
+                            cloudFunctions.getToken()
+                                .subscribeOn(Schedulers.io())
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribe({ braintreeToken ->
+                                    dialogInterface.dismiss()
+                                    Toast.makeText(
+                                        this@MainActivity,
+                                        "Congratulations! Register success",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    // and go to home profile
+                                    goToHomeActivity(userModel, braintreeToken.token)
+
+                                }, { throwable ->
+
+                                    /** if happened error */
+                                    dialogInterface.dismiss()
+                                    Toast.makeText(
+                                        this@MainActivity,
+                                        "" + throwable.message,
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                })
+                        )
                     }
                 }
         }
@@ -221,8 +266,9 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private fun goToHomeActivity(userModel: UserModel?) {
-        Common.currentUser = userModel!!
+    private fun goToHomeActivity(userModel: UserModel?, token: String?) {
+        Common.CURRENT_USER = userModel!!
+        Common.CURRENT_TOKEN = token!!
         startActivity(Intent(this@MainActivity, HomeActivity::class.java))
         finish()
     }
