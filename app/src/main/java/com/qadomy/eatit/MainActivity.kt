@@ -14,6 +14,7 @@ import com.firebase.ui.auth.IdpResponse
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.*
+import com.google.firebase.iid.FirebaseInstanceId
 import com.karumi.dexter.Dexter
 import com.karumi.dexter.PermissionToken
 import com.karumi.dexter.listener.PermissionDeniedResponse
@@ -271,10 +272,38 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+    // go to Home Activity
     private fun goToHomeActivity(userModel: UserModel?, token: String?) {
-        Common.CURRENT_USER = userModel!!
-        Common.CURRENT_TOKEN = token!!
-        startActivity(Intent(this@MainActivity, HomeActivity::class.java))
-        finish()
+        // update token  when start app
+        FirebaseInstanceId.getInstance()
+            .instanceId
+            .addOnFailureListener { e ->
+                // if happen an error
+                Toast.makeText(
+                    this@MainActivity,
+                    "" + e.message,
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                Common.CURRENT_USER = userModel!!
+                Common.CURRENT_TOKEN = token!!
+                startActivity(Intent(this@MainActivity, HomeActivity::class.java))
+                finish()
+            }
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+
+                    Common.CURRENT_USER = userModel!!
+                    Common.CURRENT_TOKEN = token!!
+
+                    // after current user is assigned we call this function
+                    Common.updateToken(this@MainActivity, task.result!!.token)
+
+                    startActivity(Intent(this@MainActivity, HomeActivity::class.java))
+                    finish()
+                }
+            }
+
+
     }
 }
