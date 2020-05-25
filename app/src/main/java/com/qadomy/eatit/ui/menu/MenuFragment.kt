@@ -17,7 +17,9 @@ import com.qadomy.eatit.R
 import com.qadomy.eatit.adapter.MyCategoriesAdapter
 import com.qadomy.eatit.common.Common
 import com.qadomy.eatit.common.SpacesItemDecoration
+import com.qadomy.eatit.eventbus.MenuItemBack
 import dmax.dialog.SpotsDialog
+import org.greenrobot.eventbus.EventBus
 
 class MenuFragment : Fragment() {
 
@@ -25,7 +27,14 @@ class MenuFragment : Fragment() {
     private lateinit var dialog: AlertDialog
     private lateinit var layoutAnimationController: LayoutAnimationController
     private var adapter: MyCategoriesAdapter? = null
-    private var recycler_menu: RecyclerView? = null
+    private var recyclerMenu: RecyclerView? = null
+
+
+    // onDestroy, we use inside it an event onMenuItemBack to avoid multiple instance of fragment
+    override fun onDestroy() {
+        EventBus.getDefault().postSticky(MenuItemBack())
+        super.onDestroy()
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -46,8 +55,8 @@ class MenuFragment : Fragment() {
         menuViewModel.getCategoryList().observe(viewLifecycleOwner, Observer {
             dialog.dismiss()
             adapter = MyCategoriesAdapter(requireContext(), it)
-            recycler_menu!!.adapter = adapter
-            recycler_menu!!.layoutAnimation = layoutAnimationController
+            recyclerMenu!!.adapter = adapter
+            recyclerMenu!!.layoutAnimation = layoutAnimationController
         })
 
         return root
@@ -60,8 +69,8 @@ class MenuFragment : Fragment() {
             AnimationUtils.loadLayoutAnimation(context, R.anim.layout_item_from_left)
 
         // init recycler_menu
-        recycler_menu = root.findViewById(R.id.recycler_menu)
-        recycler_menu!!.setHasFixedSize(true)
+        recyclerMenu = root.findViewById(R.id.recycler_menu)
+        recyclerMenu!!.setHasFixedSize(true)
         val layoutManager = GridLayoutManager(context, 2)
         layoutManager.orientation = RecyclerView.VERTICAL
         layoutManager.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
@@ -78,8 +87,8 @@ class MenuFragment : Fragment() {
             }
         }
 
-        recycler_menu!!.layoutManager = layoutManager
-        recycler_menu!!.addItemDecoration(SpacesItemDecoration(8))
+        recyclerMenu!!.layoutManager = layoutManager
+        recyclerMenu!!.addItemDecoration(SpacesItemDecoration(8))
 
     }
 }

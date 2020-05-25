@@ -27,6 +27,7 @@ import com.qadomy.eatit.database.CartDatabase
 import com.qadomy.eatit.database.CartItem
 import com.qadomy.eatit.database.LocalCartDataSource
 import com.qadomy.eatit.eventbus.CountCartEvent
+import com.qadomy.eatit.eventbus.MenuItemBack
 import com.qadomy.eatit.model.CommentModel
 import com.qadomy.eatit.model.FoodModel
 import com.qadomy.eatit.ui.comment.CommentFragment
@@ -71,6 +72,11 @@ class FoodDetailsFragment : Fragment(), TextWatcher {
     private val compositeDisposable = CompositeDisposable()
     private lateinit var cartDataSource: CartDataSource
 
+    // onDestroy, we use inside it an event onMenuItemBack to avoid multiple instance of fragment
+    override fun onDestroy() {
+        EventBus.getDefault().postSticky(MenuItemBack())
+        super.onDestroy()
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,

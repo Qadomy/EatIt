@@ -20,8 +20,10 @@ import com.qadomy.eatit.R
 import com.qadomy.eatit.adapter.MyOrderAdapter
 import com.qadomy.eatit.callback.ILoadOrderCallbackListener
 import com.qadomy.eatit.common.Common
+import com.qadomy.eatit.eventbus.MenuItemBack
 import com.qadomy.eatit.model.Order
 import dmax.dialog.SpotsDialog
+import org.greenrobot.eventbus.EventBus
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -32,6 +34,12 @@ class ViewOrdersFragment : Fragment(), ILoadOrderCallbackListener {
     internal lateinit var dialog: AlertDialog
     internal lateinit var recyclerOrder: RecyclerView
     internal lateinit var listener: ILoadOrderCallbackListener
+
+    // onDestroy, we use inside it an event onMenuItemBack to avoid multiple instance of fragment
+    override fun onDestroy() {
+        EventBus.getDefault().postSticky(MenuItemBack())
+        super.onDestroy()
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,

@@ -39,6 +39,7 @@ import com.qadomy.eatit.database.CartItem
 import com.qadomy.eatit.database.LocalCartDataSource
 import com.qadomy.eatit.eventbus.CountCartEvent
 import com.qadomy.eatit.eventbus.HideFABcart
+import com.qadomy.eatit.eventbus.MenuItemBack
 import com.qadomy.eatit.eventbus.UpdateItemInCart
 import com.qadomy.eatit.model.Order
 import com.qadomy.eatit.remote.ICloudFunctions
@@ -133,6 +134,12 @@ class CartFragment : Fragment(), ILoadTimeFromFirebaseCallback {
         }
 
         super.onStop()
+    }
+
+    // onDestroy, we use inside it an event onMenuItemBack to avoid multiple instance of fragment
+    override fun onDestroy() {
+        EventBus.getDefault().postSticky(MenuItemBack())
+        super.onDestroy()
     }
 
     // onCreateView

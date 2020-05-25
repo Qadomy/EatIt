@@ -15,6 +15,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.qadomy.eatit.R
 import com.qadomy.eatit.adapter.MyFoodListAdapter
 import com.qadomy.eatit.common.Common
+import com.qadomy.eatit.eventbus.MenuItemBack
+import org.greenrobot.eventbus.EventBus
 
 class FoodListFragment : Fragment() {
 
@@ -31,6 +33,12 @@ class FoodListFragment : Fragment() {
             adapter!!.onStop()
         }
         super.onStop()
+    }
+
+    // onDestroy, we use inside it an event onMenuItemBack to avoid multiple instance of fragment
+    override fun onDestroy() {
+        EventBus.getDefault().postSticky(MenuItemBack())
+        super.onDestroy()
     }
 
     override fun onCreateView(

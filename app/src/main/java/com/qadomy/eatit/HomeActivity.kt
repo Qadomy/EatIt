@@ -5,7 +5,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
-import android.view.MenuItem
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -52,6 +51,8 @@ class HomeActivity : AppCompatActivity() {
     // navController
     private lateinit var navController: NavController
 
+    // for multiple click on menu items
+    private var menuItemClick = -1
 
     // onCreate
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -99,36 +100,40 @@ class HomeActivity : AppCompatActivity() {
 
 
             // when click on items in menu
-            setNavigationItemSelectedListener(object :
-                NavigationView.OnNavigationItemSelectedListener {
-                override fun onNavigationItemSelected(item: MenuItem): Boolean {
-
-                    item.isChecked = true
-                    drawerLayout!!.closeDrawers() // Close all currently open drawer views by animating them out of view.
+            setNavigationItemSelectedListener { item ->
+                item.isChecked = true
+                drawerLayout!!.closeDrawers() // Close all currently open drawer views by animating them out of view.
 
 
-                    when (item.itemId) {
-                        R.id.nav_sign_out -> {
-                            // when click on sign out menu
-                            signOut()
+                when (item.itemId) {
+                    R.id.nav_sign_out -> {
+                        // when click on sign out menu
+                        signOut()
 
-                        }
-                        R.id.nav_home -> {
-                            navController.navigate(R.id.nav_home)
-                        }
-                        R.id.nav_menu -> {
-                            navController.navigate(R.id.nav_menu)
-                        }
-                        R.id.nav_cart -> {
-                            navController.navigate(R.id.nav_cart)
-                        }
-                        R.id.nav_view_order -> {
-                            navController.navigate(R.id.nav_view_order)
-                        }
                     }
-                    return true
+                    R.id.nav_home -> {
+                        if (menuItemClick != item.itemId)
+                            navController.navigate(R.id.nav_home)
+                    }
+                    R.id.nav_menu -> {
+                        if (menuItemClick != item.itemId)
+                            navController.navigate(R.id.nav_menu)
+                    }
+                    R.id.nav_cart -> {
+                        if (menuItemClick != item.itemId)
+                            navController.navigate(R.id.nav_cart)
+                    }
+                    R.id.nav_view_order -> {
+                        if (menuItemClick != item.itemId)
+                            navController.navigate(R.id.nav_view_order)
+                    }
                 }
-            })
+
+                /** we save item id if user click on menu */
+                menuItemClick = item!!.itemId
+
+                true
+            }
         }
 
         counterCartItem()
@@ -404,6 +409,18 @@ class HomeActivity : AppCompatActivity() {
                 Log.d(TAG, "message " + e.message)
             }
         }
+    }
+
+    // Event bus to process when user back from fragment
+    @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
+    public fun onMenuItemBack(event: MenuItemBack) {
+        /**
+         * this event used from all fragment in onDestroy
+         */
+
+        menuItemClick = -1
+        if (supportFragmentManager.backStackEntryCount > 0)
+            supportFragmentManager.popBackStack()
     }
 
     // event for remove fab button when go to cart screen
