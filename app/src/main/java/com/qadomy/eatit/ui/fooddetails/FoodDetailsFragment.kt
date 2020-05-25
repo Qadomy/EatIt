@@ -451,7 +451,8 @@ class FoodDetailsFragment : Fragment(), TextWatcher {
         } else
 //            if (Common.FOOD_SELECTED!!.userSelectedAddon!!.size == 0)
         {
-            // todo[NOT FIXED]: error when close addon without chosen anything
+            // todo[Event-Bus NOT FIXED]: error when close addon without chosen anything
+            //  userSelectedAddon is null ! This food is not have add on
             chipGroupUserSelectedAddon!!.removeAllViews()
         }
     }

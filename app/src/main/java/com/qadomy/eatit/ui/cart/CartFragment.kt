@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.os.Looper
 import android.os.Parcelable
 import android.text.TextUtils
+import android.util.Log
 import android.view.*
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
@@ -22,9 +23,13 @@ import androidx.recyclerview.widget.RecyclerView
 import com.braintreepayments.api.dropin.DropInRequest
 import com.braintreepayments.api.dropin.DropInResult
 import com.google.android.gms.location.*
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import com.qadomy.eatit.R
 import com.qadomy.eatit.adapter.MyCartAdapter
+import com.qadomy.eatit.callback.ILoadTimeFromFirebaseCallback
 import com.qadomy.eatit.callback.IMyButtonCallback
 import com.qadomy.eatit.common.Common
 import com.qadomy.eatit.common.MySwipeHelper
@@ -49,9 +54,10 @@ import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import java.io.IOException
+import java.text.SimpleDateFormat
 import java.util.*
 
-class CartFragment : Fragment() {
+class CartFragment : Fragment(), ILoadTimeFromFirebaseCallback {
 
     // location
     private lateinit var locationRequest: LocationRequest
@@ -81,6 +87,8 @@ class CartFragment : Fragment() {
     private val REQUEST_BRAINTREE_CODE: Int = 8888
 
     lateinit var cloudFunctions: ICloudFunctions
+
+    lateinit var listener: ILoadTimeFromFirebaseCallback
 
     /**
      *
@@ -180,11 +188,14 @@ class CartFragment : Fragment() {
      */
     private fun initView(root: View) {
 
+        // inflate menu
+        setHasOptionsMenu(true)
+
         // init cloud functions interface
         cloudFunctions = RetrofitCloudClient.getInstance().create(ICloudFunctions::class.java)
 
-        // inflate menu
-        setHasOptionsMenu(true)
+        // implement listener from ILoadTimeFromFirebaseCallback
+        listener = this
 
         // cart data source
         cartDataSource = LocalCartDataSource(CartDatabase.getInstance(requireContext()).cartDAO())
@@ -464,8 +475,8 @@ class CartFragment : Fragment() {
                                 order.isCod = true
                                 order.transactionId = "Cash On Delivery"
 
-                                // submit to Firebase database
-                                writeOrdersToFirebase(order)
+                                // submit to server
+                                syncLocalTimeWithServer(order)
                             }
 
                             override fun onSubscribe(d: Disposable) {
@@ -750,8 +761,8 @@ class CartFragment : Fragment() {
                                                         order.transactionId =
                                                             braintreeTransaction.transaction!!.id
 
-                                                        // submit to Firebase database
-                                                        writeOrdersToFirebase(order)
+                                                        // submit to server
+                                                        syncLocalTimeWithServer(order)
                                                     }
 
                                                 }, { t: Throwable? ->
@@ -786,6 +797,44 @@ class CartFragment : Fragment() {
                     })
             }
         }
+    }
+
+    // submit to server
+    private fun syncLocalTimeWithServer(order: Order) {
+        val offsetRef = FirebaseDatabase.getInstance().getReference(".info/serverTimeOffset")
+        offsetRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onCancelled(p0: DatabaseError) {
+                listener.onLoadTimeFailed(p0.message)
+            }
+
+            override fun onDataChange(p0: DataSnapshot) {
+                val offset = p0.getValue(Long::class.java)
+                // add missing offset to your current time
+                val estimatedServerTimeInMs = System.currentTimeMillis() + offset!!
+                val sdf = SimpleDateFormat("MMM dd yyyy, HH:mm")
+
+                val date = Date(estimatedServerTimeInMs)
+
+                Log.d("cart fragment", "" + sdf.format(date))
+
+                listener.onLoadTimeSuccess(order, estimatedServerTimeInMs)
+
+            }
+        })
+    }
+
+
+    /**
+     *
+     * implement methods from ILoadTimeFromFirebaseCallback interface
+     */
+    override fun onLoadTimeSuccess(order: Order, estimatedTimeMs: Long) {
+        order.createDate = (estimatedTimeMs)
+        writeOrdersToFirebase(order)
+    }
+
+    override fun onLoadTimeFailed(message: String) {
+        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
     }
 
 }
