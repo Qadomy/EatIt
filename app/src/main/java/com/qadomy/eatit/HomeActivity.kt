@@ -94,33 +94,42 @@ class HomeActivity : AppCompatActivity() {
 
 
         // when click on items in menu
-        navView.setNavigationItemSelectedListener(object :
-            NavigationView.OnNavigationItemSelectedListener {
-            override fun onNavigationItemSelected(item: MenuItem): Boolean {
-
-                item.isChecked = true
-                drawerLayout!!.closeDrawers() // Close all currently open drawer views by animating them out of view.
+        navView.run {
+            Common.setSpanString("Hey, ", Common.CURRENT_USER!!.name, textUser)
 
 
-                when (item.itemId) {
-                    R.id.nav_sign_out -> {
-                        // when click on sign out menu
-                        signOut()
+            // when click on items in menu
+            setNavigationItemSelectedListener(object :
+                NavigationView.OnNavigationItemSelectedListener {
+                override fun onNavigationItemSelected(item: MenuItem): Boolean {
 
+                    item.isChecked = true
+                    drawerLayout!!.closeDrawers() // Close all currently open drawer views by animating them out of view.
+
+
+                    when (item.itemId) {
+                        R.id.nav_sign_out -> {
+                            // when click on sign out menu
+                            signOut()
+
+                        }
+                        R.id.nav_home -> {
+                            navController.navigate(R.id.nav_home)
+                        }
+                        R.id.nav_menu -> {
+                            navController.navigate(R.id.nav_menu)
+                        }
+                        R.id.nav_cart -> {
+                            navController.navigate(R.id.nav_cart)
+                        }
+                        R.id.nav_view_order -> {
+                            navController.navigate(R.id.nav_view_order)
+                        }
                     }
-                    R.id.nav_home -> {
-                        navController.navigate(R.id.nav_home)
-                    }
-                    R.id.nav_menu -> {
-                        navController.navigate(R.id.nav_menu)
-                    }
-                    R.id.nav_cart -> {
-                        navController.navigate(R.id.nav_cart)
-                    }
+                    return true
                 }
-                return true
-            }
-        })
+            })
+        }
 
         counterCartItem()
     }

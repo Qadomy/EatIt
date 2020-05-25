@@ -43,4 +43,5 @@
     <string name="cash_on_delivary">Cash On Delivary</string>
     <string name="braintree">Braintree</string>
     <string name="enter_comment">Enter Comment</string>
+    <string name="menu_view_orders">View Orders</string>
 </resources>
