@@ -70,7 +70,7 @@ class FoodListFragment : Fragment() {
             AnimationUtils.loadLayoutAnimation(context, R.anim.layout_item_from_left)
 
 
-        // change the bar title in food list fragemt
+        // change the bar title in food list fragment
         (activity as AppCompatActivity).supportActionBar!!.title = Common.CATEGORY_SELECTED!!.name
 
 

@@ -227,11 +227,11 @@ class FoodDetailsFragment : Fragment(), TextWatcher {
     private fun initView(root: View?) {
         // addon bottom sheet dialog 
         addonBottomSheetDialog = BottomSheetDialog(requireContext(), R.style.DialogStyle)
-        val layout_user_selected_addon = layoutInflater.inflate(R.layout.layout_addon_display, null)
+        val layoutUserSelectedAddon = layoutInflater.inflate(R.layout.layout_addon_display, null)
         chipGroupAddon =
-            layout_user_selected_addon.findViewById(R.id.chip_groupa_addon) as ChipGroup
-        edtSearchAddon = layout_user_selected_addon.findViewById(R.id.edt_search) as EditText
-        addonBottomSheetDialog.setContentView(layout_user_selected_addon)
+            layoutUserSelectedAddon.findViewById(R.id.chip_groupa_addon) as ChipGroup
+        edtSearchAddon = layoutUserSelectedAddon.findViewById(R.id.edt_search) as EditText
+        addonBottomSheetDialog.setContentView(layoutUserSelectedAddon)
         addonBottomSheetDialog.setOnDismissListener { dialogInterface ->
             displayUserSelectAddon()
             calculateTotalPrice()

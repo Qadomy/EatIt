@@ -55,16 +55,16 @@ class MyFoodListAdapter(
     override fun getItemCount() = foodList.size
 
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
-        Glide.with(context).load(foodList.get(position).image)
+        Glide.with(context).load(foodList[position].image)
             .into(holder.imgFoodimage!!)
-        holder.txtFoodName!!.text = foodList.get(position).name
-        holder.txtFoodPrice!!.text = foodList.get(position).price.toString()
+        holder.txtFoodName!!.text = foodList[position].name
+        holder.txtFoodPrice!!.text = StringBuilder("$").append(foodList[position].price.toString())
 
 
         // Event Bus
         holder.setListener(object : IRecycleItemClickListener {
             override fun onItemClick(view: View, pos: Int) {
-                Common.FOOD_SELECTED = foodList.get(pos)
+                Common.FOOD_SELECTED = foodList[pos]
                 Common.FOOD_SELECTED!!.key = pos.toString()
                 EventBus.getDefault().postSticky(FoodItemClick(true, foodList[pos]))
             }
@@ -97,7 +97,7 @@ class MyFoodListAdapter(
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(object : SingleObserver<CartItem> {
                     override fun onSuccess(cartItemFromDB: CartItem) {
-                        if (cartItemFromDB.equals(cartItem)) {
+                        if (cartItemFromDB == cartItem) {
                             // if item already in database, just update
                             cartItemFromDB.foodExtraPrice = cartItem.foodExtraPrice
                             cartItemFromDB.foodAddon = cartItem.foodAddon

@@ -20,15 +20,6 @@ class MenuViewModel : ViewModel(), ICategoryCallback {
         categoryCallbackListener = this
     }
 
-    override fun onCategoryLoadSuccess(categoryList: List<CategoryModel>) {
-        categoriesListMutable!!.value = categoryList
-    }
-
-    override fun onCategoryLoadFailed(message: String) {
-        messageError.value = message
-    }
-
-
     fun getCategoryList(): MutableLiveData<List<CategoryModel>> {
         if (categoriesListMutable == null) {
             categoriesListMutable = MutableLiveData()
@@ -37,11 +28,12 @@ class MenuViewModel : ViewModel(), ICategoryCallback {
         return categoriesListMutable!!
     }
 
+
     fun getMessageError(): MutableLiveData<String> {
         return messageError
     }
 
-    private fun loadCategory() {
+    fun loadCategory() {
         val tempList = ArrayList<CategoryModel>()
         val categoryRef = FirebaseDatabase.getInstance().getReference(Common.CATEGORY_REF)
         categoryRef.addListenerForSingleValueEvent(object : ValueEventListener {
@@ -60,5 +52,14 @@ class MenuViewModel : ViewModel(), ICategoryCallback {
 
         })
 
+    }
+
+
+    override fun onCategoryLoadSuccess(categoryList: List<CategoryModel>) {
+        categoriesListMutable!!.value = categoryList
+    }
+
+    override fun onCategoryLoadFailed(message: String) {
+        messageError.value = message
     }
 }

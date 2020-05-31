@@ -151,7 +151,7 @@ class HomeActivity : AppCompatActivity() {
         builder.setTitle("Sign out")
             .setMessage("Are You Sure Want Exit?")
             .setNegativeButton("CANCEL") { dialogInterface, _ -> dialogInterface.dismiss() }
-            .setPositiveButton("OK") { dialogInterface, _ ->
+            .setPositiveButton("OK") { _, _ ->
                 // when click on ok for sign out
 
                 Common.FOOD_SELECTED = null

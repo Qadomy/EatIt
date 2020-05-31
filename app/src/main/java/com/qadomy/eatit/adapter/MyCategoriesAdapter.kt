@@ -88,5 +88,10 @@ class MyCategoriesAdapter(
         }
     }
 
+    // function for return category list
+    fun getCategoryList(): List<CategoryModel> {
+        return categoriesList
+    }
+
 
 }

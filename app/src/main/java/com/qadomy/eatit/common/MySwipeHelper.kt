@@ -17,6 +17,12 @@ import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
+
+/**
+ *
+ * This class responsible to create swipe for recycler view items to show button
+ */
+
 abstract class MySwipeHelper(
     context: Context,
     private val recyclerView: RecyclerView,
