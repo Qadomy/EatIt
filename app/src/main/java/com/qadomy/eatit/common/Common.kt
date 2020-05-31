@@ -173,6 +173,11 @@ object Common {
     }
 
 
+    fun getNewOrderTopic(): String {
+        return StringBuilder("/topics/new_order").toString()
+    }
+
+
     var AUTHORISE_TOKEN: String? = null
     var CURRENT_TOKEN: String = ""
     var CURRENT_USER: UserModel? = null
