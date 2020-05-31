@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
@@ -225,6 +226,13 @@ class FoodDetailsFragment : Fragment(), TextWatcher {
     }
 
     private fun initView(root: View?) {
+
+        // set action bar title the selected food name
+        (activity as AppCompatActivity).supportActionBar!!.setTitle(Common.FOOD_SELECTED!!.name)
+
+        // set menu
+        setHasOptionsMenu(true)
+
         // addon bottom sheet dialog 
         addonBottomSheetDialog = BottomSheetDialog(requireContext(), R.style.DialogStyle)
         val layoutUserSelectedAddon = layoutInflater.inflate(R.layout.layout_addon_display, null)
