@@ -42,6 +42,7 @@ import com.qadomy.eatit.eventbus.CountCartEvent
 import com.qadomy.eatit.eventbus.HideFABcart
 import com.qadomy.eatit.eventbus.MenuItemBack
 import com.qadomy.eatit.eventbus.UpdateItemInCart
+import com.qadomy.eatit.model.FCMResponse
 import com.qadomy.eatit.model.FCMSendData
 import com.qadomy.eatit.model.Order
 import com.qadomy.eatit.remote.ICloudFunctions
@@ -565,12 +566,13 @@ class CartFragment : Fragment(), ILoadTimeFromFirebaseCallback {
                                     ifcmService.sendNotification(sendData)
                                         .subscribeOn(Schedulers.io())
                                         .observeOn(AndroidSchedulers.mainThread())
-                                        .subscribe({ task ->
+                                        .subscribe({ task:FCMResponse ->
 
                                             if (task!!.success != 0)
+
                                                 Toast.makeText(
                                                     context!!,
-                                                    "Order placed successfully",
+                                                    "Order placed successfully **",
                                                     Toast.LENGTH_SHORT
                                                 ).show()
 
@@ -578,18 +580,13 @@ class CartFragment : Fragment(), ILoadTimeFromFirebaseCallback {
 
                                             Toast.makeText(
                                                 context!!,
-                                                "order must sent but notification failed",
+                                                "order was sent but notification failed",
                                                 Toast.LENGTH_SHORT
                                             ).show()
 
                                         })
                                 )
 
-                                Toast.makeText(
-                                    context!!,
-                                    "Order Placed Successfully",
-                                    Toast.LENGTH_SHORT
-                                ).show()
                             }
 
                             override fun onSubscribe(d: Disposable) {

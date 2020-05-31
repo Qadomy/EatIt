@@ -28,7 +28,7 @@
         </activity>
 
         <!-- firebase cloud messaging service-->
-        <service android:name=".service.MyFCMservices">
+        <service android:name=".service.MyFCMService">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
